@@ -1,0 +1,350 @@
+# What's Missing in LLM/Agent Orchestration Loops
+
+**Research Date:** March 2026
+
+---
+
+## Executive Summary
+
+LLM-powered agent orchestration has rapidly evolved from simple prompt-response patterns to
+complex multi-step, multi-agent systems. Yet the gap between demo-quality and production-quality
+agent systems remains the central challenge of 2026. While nearly two-thirds of organizations
+experiment with AI agents, fewer than one in four have scaled them to production. An estimated
+95% of agentic AI projects fail to reach production, and Gartner predicts 40% of enterprise
+agentic AI projects will be canceled by end-of-2027 due to escalating costs and misaligned value.
+
+This document catalogs what's missing, broken, or unsolved in today's orchestration loop
+architectures.
+
+---
+
+## 1. Orchestration Loop Patterns: The State of Play
+
+### 1.1 ReAct (Reason + Act)
+The dominant paradigm. The agent observes, reasons about the observation, selects a tool/action,
+executes it, and loops. Used by Claude Agent SDK, LangChain agents, and most frameworks.
+
+**Limitations:**
+- Single-threaded reasoning — can only reason about one trajectory at a time
+- No backtracking — once a tool is called, the agent can't undo its effects
+- Prone to "reasoning drift" where the agent loses sight of the original goal over many steps
+- Context window fills up with intermediate observations, degrading performance
+
+### 1.2 Plan-Then-Execute
+Agent creates an upfront plan, then executes steps sequentially. Used by some AutoGen and
+CrewAI configurations.
+
+**Limitations:**
+- Plans become stale as the environment changes during execution
+- Replanning is expensive (full LLM call to generate new plan)
+- Brittle to unexpected tool outputs — the plan assumed certain shapes of data
+
+### 1.3 Reflexion / Self-Critique
+Agent executes, evaluates its own output, and retries if unsatisfied. Promising for improving
+quality but adds latency and cost.
+
+**Limitations:**
+- Self-evaluation is unreliable — LLMs are poor judges of their own errors
+- Can create infinite retry loops when the agent can't satisfy its own critic
+- Doubles or triples token usage per step
+
+### 1.4 Multi-Agent Orchestration
+Multiple specialized agents collaborate via message passing, supervised by an orchestrator.
+
+**Limitations:**
+- 36.9% failure rate from coordination breakdowns (inter-agent misalignment)
+- Error cascading amplified up to 17.2x across agent boundaries
+- Debugging distributed agent failures is genuinely hard
+- Cost explosion — each agent maintains its own context, multiplying token usage
+
+---
+
+## 2. The Big Gaps
+
+### 2.1 Reliable Termination
+
+**The Problem:** Agent loops have no principled way to know when they're done.
+
+Current approaches are crude: max iteration counts, time limits, or token budgets. These are
+safety rails, not intelligence. The agent doesn't reason about whether it has achieved its goal
+— it either hits a wall or the LLM happens to emit a "done" signal.
+
+**What's missing:**
+- Goal-aware termination: formal verification that the objective was met
+- Progress detection: recognizing when the agent is stuck vs. making progress
+- Graceful degradation: returning partial results with confidence estimates instead of
+  hard-failing at a budget limit
+- Distinguishing "I'm done" from "I give up" from "I'm spinning"
+
+### 2.2 State Management & Persistence
+
+**The Problem:** Most agent loops are ephemeral. State lives in the LLM context window and
+vanishes when the context overflows or the process dies.
+
+**Current solutions:**
+- LangGraph: checkpoints after every node, can resume from crashes
+- Temporal: enterprise-grade durable workflow execution with event history
+- Microsoft Agent Framework: file-based checkpoint storage
+- CrewAI/Swarm: minimal or no persistence — failures require full restart
+
+**What's missing:**
+- **Semantic state diffing**: knowing *what changed* between checkpoints, not just that state
+  was saved
+- **Partial rollback**: undo the last N steps without restarting the entire workflow
+- **Cross-session memory**: agents that remember across invocations without manual memory
+  management (MemGPT/A-Mem are early attempts, not production-ready)
+- **State schema evolution**: what happens when the agent's tools or available actions change
+  mid-workflow?
+
+### 2.3 Context Window Management
+
+**The Problem:** The agent's "working memory" is the context window. As the loop iterates,
+observations, tool results, and reasoning traces accumulate until the window is full.
+
+**Known failure modes:**
+- "Lost in the middle" effect: LLMs attend poorly to information in the middle of long contexts
+- Context pollution: irrelevant tool outputs dilute attention on important information
+- Memory compression introduces hallucinations — summaries lose critical details
+- Abrupt truncation discards potentially important early context
+
+**What's missing:**
+- **Intelligent context curation**: dynamically selecting what to keep, summarize, or evict
+  based on relevance to the *current* subtask (not just recency)
+- **Hierarchical memory**: working memory (current step) + episodic memory (this session) +
+  semantic memory (long-term knowledge), with principled promotion/demotion
+- **Attention-aware scheduling**: knowing which parts of context the model is actually using
+  and optimizing accordingly
+
+### 2.4 Error Recovery & Resilience
+
+**The Problem:** When a tool call fails, agents have rudimentary recovery strategies — typically
+retrying the same call or hallucinating alternative arguments.
+
+**Real-world failure stories:**
+- An agent retried malformed JSON payloads against a pricing API, generating 400 errors
+  indefinitely — the "hallucinated tool argument trap"
+- An inventory agent invented a nonexistent SKU, then called four downstream APIs to price,
+  stock, and ship the phantom item — one hallucinated fact triggering a multi-system cascade
+- Production agents ignored stop commands and gave the same response 58-59 times in a loop
+
+**What's missing:**
+- **Structured error taxonomies**: distinguishing "tool is down" from "I called it wrong" from
+  "this tool can't do what I need"
+- **Fallback strategies**: if tool A fails, try tool B or ask the user — expressed declaratively,
+  not hoped-for from the LLM
+- **Blast radius containment**: preventing one failed tool call from poisoning the entire
+  reasoning chain
+- **Circuit breakers**: automatic disabling of tools that are consistently failing, borrowed
+  from distributed systems patterns
+
+### 2.5 Evaluation & Observability
+
+**The Problem:** 48% of teams lack proper evaluation pipelines for their agents. Observability
+tooling exists (Langfuse, LangSmith, Maxim, OpenTelemetry-based solutions) but evaluation of
+*agent behavior quality* — not just model output quality — is immature.
+
+**What's missing:**
+- **Trajectory evaluation**: assessing not just the final output but the *path* the agent took
+  (was it efficient? Did it use the right tools? Did it explore unnecessarily?)
+- **Regression testing for agent behavior**: when you change the prompt or swap models, did
+  the agent's behavioral patterns change in unexpected ways?
+- **Cost-normalized quality metrics**: "this agent achieves 85% task success at $0.12/task" vs
+  "this one achieves 90% at $2.40/task" — no standard way to express this tradeoff
+- **Live anomaly detection**: real-time identification of loops going off the rails before they
+  exhaust budgets
+- **Causal attribution**: when the agent fails, *which step* caused the failure? Current traces
+  show what happened but not why
+
+### 2.6 Determinism & Reproducibility
+
+**The Problem:** Agent runs are inherently non-deterministic. The same input can produce
+different tool call sequences, different intermediate reasoning, and different final outputs.
+
+**What's missing:**
+- **Replay debugging**: ability to replay an agent run with the same random seeds and cached
+  tool responses to reproduce failures
+- **Behavioral specifications**: expressing "the agent should always check inventory before
+  placing an order" as a testable invariant, not a hope in the system prompt
+- **Deterministic mode**: for testing and CI/CD, a way to pin agent behavior so tests are
+  stable (temperature=0 is insufficient — tool outputs still vary)
+
+### 2.7 Cost Control
+
+**The Problem:** Agent loops are token-hungry. Each reasoning step, tool call, and observation
+consumes tokens. Multi-agent systems multiply this. Production costs can be 10-100x what naive
+estimates suggest.
+
+**What's missing:**
+- **Cost-aware planning**: agent considers token budget when deciding whether to explore
+  further or return a good-enough answer
+- **Token-efficient tool protocols**: tools that return structured, minimal responses instead of
+  dumping raw data into the context
+- **Speculative execution**: exploring multiple paths cheaply before committing to expensive
+  tool calls
+- **Shared context across agents**: instead of each agent maintaining its own full context,
+  sharing relevant state to reduce total token usage
+
+### 2.8 Human-in-the-Loop Integration
+
+**The Problem:** Many production workflows require human approval at certain steps. Current
+implementations are bolted on, not first-class.
+
+**What's missing:**
+- **Typed approval gates**: "this step requires human approval" expressed as part of the
+  workflow definition, not a conditional in the prompt
+- **Partial delegation**: "the agent handles routine cases, escalates edge cases to humans"
+  with clear criteria for what constitutes an edge case
+- **Async human interaction**: the agent pauses, the human responds hours later, and the
+  agent resumes with full context (requires checkpoint/resume, see 2.2)
+- **Feedback loops**: human corrections are fed back to improve agent behavior, not just
+  override it
+
+### 2.9 Security & Safety
+
+**The Problem:** Agent loops introduce novel attack surfaces that traditional application
+security doesn't cover.
+
+**OWASP ASI's taxonomy includes 15 threat categories:**
+- Memory poisoning (corrupting the agent's accumulated context)
+- Tool misuse (agent calls tools in unintended ways)
+- Privilege escalation (agent gains access beyond its intended scope)
+- Resource exhaustion (infinite loops consuming compute/API budgets)
+- Cascading hallucination attacks (one hallucinated fact triggers downstream real actions)
+- Prompt injection through tool outputs (external data sources feeding adversarial content)
+
+**What's missing:**
+- **Capability-based security for tools**: fine-grained permissions (this agent can read files
+  but not write, can query the DB but not modify)
+- **Output validation pipelines**: checking agent actions against policy *before* execution,
+  not after
+- **Sandboxed execution**: tool calls execute in isolated environments where damage is contained
+- **Audit trails**: immutable logs of every decision and action for compliance and forensics
+
+### 2.10 Composability & Interoperability
+
+**The Problem:** Agent systems are monolithic. You can't easily swap out the planner, change the
+memory system, or plug in a different orchestration strategy.
+
+**Emerging standards:**
+- Anthropic's MCP (Model Context Protocol): standardized tool/resource interface
+- Google's A2A Protocol: agent-to-agent communication standard
+- OpenAI's Agents SDK: structured tool definitions
+
+**What's missing:**
+- **Pluggable loop architectures**: swap ReAct for plan-then-execute without rewriting the
+  agent
+- **Standard agent communication protocol**: A2A is promising but early — no universal way for
+  agents from different frameworks to collaborate
+- **Composable middleware**: add logging, caching, rate limiting, or auth to tool calls as
+  cross-cutting concerns
+- **Workflow portability**: define an agent workflow once, run it on LangGraph, Temporal, or
+  bare metal
+
+---
+
+## 3. The Framework Landscape (March 2026)
+
+| Framework | Strengths | Key Gaps |
+|-----------|-----------|----------|
+| **LangGraph** | Stateful, checkpointed, production-proven | Complex API, steep learning curve, Python-only |
+| **Claude Agent SDK** | Clean loop design, extended thinking, MCP native | Newer, smaller ecosystem |
+| **OpenAI Agents SDK** | Simple API, good tool integration | Limited state management, basic orchestration |
+| **CrewAI** | Easy multi-agent setup, role-based agents | Limited persistence, weak error recovery |
+| **AutoGen/MS Agent Framework** | Enterprise Azure integration, multi-language | Still in unification (AutoGen + Semantic Kernel), GA pending |
+| **Temporal + LLM** | Battle-tested durability, exactly-once execution | Not agent-native — requires glue code |
+| **Google ADK** | Loop agents with termination control | Early stage, limited ecosystem |
+
+---
+
+## 4. The Production Readiness Checklist (What Most Teams Are Missing)
+
+Based on practitioner reports, here's what separates demo agents from production agents:
+
+1. **Budget guardrails** — hard limits on tokens, time, and API calls per run
+2. **Structured error handling** — not relying on the LLM to "figure it out"
+3. **Checkpoint/resume** — survive crashes and deploys
+4. **Observability** — traces, metrics, and alerts on anomalous behavior
+5. **Evaluation pipelines** — automated quality checks with human review for edge cases
+6. **Deterministic testing** — CI/CD that catches behavioral regressions
+7. **Security boundaries** — least-privilege tool access, input/output validation
+8. **Human escalation** — clear paths for the agent to ask for help
+9. **Cost monitoring** — per-task cost tracking with anomaly detection
+10. **Graceful degradation** — return partial results rather than failing silently
+
+---
+
+## 5. Open Research Questions
+
+1. **How do you formally verify that an agent loop will terminate with a correct result?**
+   Traditional verification doesn't apply — the state space is unbounded.
+
+2. **What's the right abstraction for agent memory?**
+   Context windows, RAG, vector stores, and structured databases are all used, but none
+   provides a unified "agent memory" that handles working memory, episodic memory, and
+   long-term knowledge coherently.
+
+3. **Can agents learn from their own execution traces?**
+   Self-improving agents (Reflexion, Voyager) show promise but are expensive and unreliable.
+   How do you close the feedback loop without introducing instability?
+
+4. **What's the equivalent of "unit testing" for agent behavior?**
+   Testing individual tool calls is easy. Testing emergent multi-step behavior is an open
+   problem. Behavioral specifications and property-based testing are promising directions.
+
+5. **How do you optimize the cost-quality Pareto frontier?**
+   When should the agent use a cheaper model for routine steps and escalate to a more capable
+   model for hard decisions? Model routing within agent loops is nascent.
+
+6. **What's the right granularity for multi-agent decomposition?**
+   When is one agent with many tools better than many specialized agents? The answer likely
+   depends on the task, but we lack frameworks for making this decision.
+
+7. **How do you handle real-time constraints in agent loops?**
+   Current loops are latency-insensitive. For user-facing applications, streaming intermediate
+   results and time-bounded reasoning are unsolved.
+
+8. **What governance frameworks apply to autonomous agent systems?**
+   The EU AI Act (2026) requires documentation and audits for critical AI systems. How do you
+   audit an agent that takes different paths every time?
+
+---
+
+## 6. Key Takeaways
+
+**The tooling gap is more important than the model gap.** A mediocre model with excellent
+orchestration outperforms a brilliant model with poor orchestration. Investment in loop
+architecture, state management, evaluation, and observability yields higher returns than
+chasing the next model upgrade.
+
+**Multi-agent is premature for most production use cases.** Single-agent with good tools
+(Level 2-3) is the production sweet spot. Multi-agent (Level 4) is fascinating for demos
+but painful for production — costs explode and debugging becomes genuinely difficult.
+
+**The biggest gap isn't technical — it's architectural maturity.** Organizations that treat
+agents as productivity add-ons rather than workflow redesigns consistently fail to scale.
+The winners are those willing to redesign processes around agent capabilities rather than
+layering agents onto legacy workflows.
+
+---
+
+## Sources
+
+- [LLM Orchestration in 2026: Top 22 Frameworks and Gateways](https://aimultiple.com/llm-orchestration)
+- [AI Agents in Production: What Actually Works in 2026](https://47billion.com/blog/ai-agents-in-production-frameworks-protocols-and-what-actually-works-in-2026/)
+- [State of Agent Engineering — LangChain](https://www.langchain.com/state-of-agent-engineering)
+- [The Agent Deployment Gap — ZenML](https://www.zenml.io/blog/the-agent-deployment-gap-why-your-llm-loop-isnt-production-ready-and-what-to-do-about-it)
+- [7 AI Agent Failure Modes — Galileo](https://galileo.ai/blog/agent-failure-modes-guide)
+- [LLM Tool-Calling in Production: The Infinite Loop Failure Mode](https://medium.com/@komalbaparmar007/llm-tool-calling-in-production-rate-limits-retries-and-the-infinite-loop-failure-mode-you-must-2a1e2a1e84c8)
+- [5 Failure Modes in Agent Memory Compression](https://www.indium.tech/blog/agent-memory-compression-failure-modes/)
+- [Agentic Resource Exhaustion: The Infinite Loop Attack](https://medium.com/@instatunnel/agentic-resource-exhaustion-the-infinite-loop-attack-of-the-ai-era-76a3f58c62e3)
+- [Self-Improving Coding Agents — Addy Osmani](https://addyosmani.com/blog/self-improving-agents/)
+- [Agent Observability: Stop Costly Loops — Agentix Labs](https://www.agentixlabs.com/blog/general/agent-observability-for-tool-using-agents-stop-costly-loops/)
+- [Agentic AI Workflows: Orchestration with Temporal](https://intuitionlabs.ai/articles/agentic-ai-temporal-orchestration)
+- [LangGraph: Build Stateful Multi-Agent Systems](https://www.mager.co/blog/2026-03-12-langgraph-deep-dive/)
+- [The 2026 Guide to Agentic Workflow Architectures](https://www.stackai.com/blog/the-2026-guide-to-agentic-workflow-architectures)
+- [Agents At Work: The 2026 Playbook](https://promptengineering.org/agents-at-work-the-2026-playbook-for-building-reliable-agentic-workflows/)
+- [Agent Evaluation: How to Test and Measure Agentic AI](https://machinelearningmastery.com/agent-evaluation-how-to-test-and-measure-agentic-ai-performance/)
+- [7 Agentic AI Trends to Watch in 2026](https://machinelearningmastery.com/7-agentic-ai-trends-to-watch-in-2026/)
+- [Top 10+ Agentic Orchestration Frameworks & Tools in 2026](https://aimultiple.com/agentic-orchestration)
+- [How the Agent Loop Works — Claude API Docs](https://platform.claude.com/docs/en/agent-sdk/agent-loop)
+- [Checkpointing and Resuming Workflows — Microsoft](https://learn.microsoft.com/en-us/agent-framework/tutorials/workflows/checkpointing-and-resuming)
