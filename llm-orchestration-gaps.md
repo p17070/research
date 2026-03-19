@@ -360,7 +360,115 @@ Based on practitioner reports, here's what separates demo agents from production
 
 ---
 
-## 7. Open Research Questions
+## 7. Deep Dive: Six Structural Gaps in the Orchestration Layer
+
+These gaps sit *in the orchestration layer itself* — not in the models, tools, or individual
+agents, but in the connective tissue between them.
+
+### 7.1 No Orchestration-Aware Evaluation
+
+Benchmarks (GAIA, CUB) test whether an agent accomplished a task. They do **not** test whether
+the orchestration layer made good routing, delegation, or recovery decisions. The orchestrator
+is invisible to current evals.
+
+- Single-agent baselines often beat multi-agent systems in controlled tests — OpenAI's o1
+  sometimes delivers better task completion rates than MetaGPT or AG2 due to fewer coordination
+  dependencies. We lack benchmarks that identify *when* multi-agent orchestration actually adds
+  value.
+- Accuracy gains saturate or fluctuate beyond ~4 agents, but there are no standardized
+  benchmarks to identify this threshold for a given task class.
+- LangGraph finishes 2.2x faster than CrewAI; LangChain and AutoGen show 8-9x differences
+  in token efficiency. No benchmark suite systematically compares orchestration frameworks on
+  equal footing.
+
+### 7.2 No Cost-Aware Orchestration
+
+Cost reduction techniques exist (caching, model routing, prompt compression), but the
+orchestration layer itself is a cost multiplier with no built-in awareness.
+
+- Each agent interaction re-injects prior turns, summaries, and chain-of-thought. Context
+  grows linearly; you pay for every token. Agents calling agents plus retries = unpredictable
+  multiplicative costs.
+- Research like BudgetMLAgent shows 94% cost reduction via cascaded model routing, but this is
+  a research technique, not a built-in feature of any production framework.
+- **20-40% of API spend is redundant** without intelligent caching. Most frameworks do not
+  include semantic caching as a first-class primitive.
+- No "circuit breaker" standard for agent cost — observability tells you what happened but
+  doesn't prevent blowups.
+
+### 7.3 No Verifiable Execution (The Reproducibility Wall)
+
+The probability of exactly reproducing an agent run is approximately zero. Setting
+`temperature=0` is necessary but insufficient — batch size variability, CUDA kernel
+non-determinism, model version updates, token encoding shifts, and tool response latency all
+introduce entropy.
+
+- **Logs are self-attesting and therefore unverifiable.** For regulated industries, there is no
+  independent witness layer to cryptographically attest that execution happened as claimed.
+- Multi-agent compounds the problem: N agents = N sources of non-determinism + N opportunities
+  for misinterpretation. No framework provides coordinated verification across agent networks.
+- **Compliance-grade proof does not exist.** No current system can answer "prove your agent
+  didn't discriminate" with cryptographic certainty.
+- **Best available workarounds**: Temporal separates deterministic orchestration from
+  non-deterministic LLM calls (enabling crash recovery via event replay). Alibaba's SOURCE
+  CODE AGENT reframes the LLM as a tool called by deterministic code. These reduce but do not
+  eliminate the problem.
+
+### 7.4 No Inter-Agent Safety Model
+
+Guardrail tooling (NeMo Guardrails, Guardrails AI, LangChain middleware) is designed for
+single-model I/O filtering. Multi-agent orchestration creates safety gaps *between* agents.
+
+- When Agent A delegates to Agent B, there is no standard mechanism to enforce safety policies
+  on the inter-agent communication channel. A prompt injection that passes Agent A's output
+  filter could be weaponized as Agent B's input.
+- **The "Bag of Agents" attack surface**: in flat topologies, agents can echo and validate each
+  other's hallucinations — a "hallucination loop" that is a safety problem, not just quality.
+- Tool-call safety is per-agent, not system-wide. An agent with read-only DB access could
+  delegate to another agent with write access. No orchestration-level policy constrains what
+  the *system of agents* can collectively do.
+
+### 7.5 No Typed Agent Contracts (Composability Gap)
+
+The industry frames agent composition as analogous to microservices, but agents lack the
+foundational primitives: contracts, schemas, service discovery, versioning.
+
+- Microservices have OpenAPI/gRPC schemas. Agent-to-agent communication relies on natural
+  language or ad-hoc protocols. A2A defines how agents communicate, MCP defines tool
+  connections, but neither provides typed service contracts.
+- **The generalizability paradox**: multi-agent coordination rules rarely transfer across use
+  cases without custom prompt engineering. The more general you want the system, the more
+  specific the coordination rules — the opposite of composability.
+- **No agent versioning or dependency management.** Swapping a sub-agent's model version or
+  prompt can silently change system behavior with no rollback mechanism. Microservices have
+  container registries, semantic versioning, and blue-green deployments. Agents have nothing.
+
+### 7.6 No Streaming-Native Agent Architecture
+
+Real-time multi-agent systems require streaming-native primitives that don't exist yet.
+
+- Traditional loops have clear request-response turns. Real-time bidirectional streaming
+  eliminates turn boundaries: how do you segment continuous data into events for debugging?
+  How do you store/transfer context when there is no "end of turn" signal?
+- Concurrency scales exponentially — simultaneous voice, text, tool calls, and multi-agent
+  interactions require managing N async I/O streams with low latency. Google ADK acknowledges
+  missing lifecycle hooks (before-model-callback, after-model-callback).
+- State synchronization across streaming agents is unsolved. Redis Streams provide
+  sub-millisecond pub/sub, but consistent shared state during concurrent operations has no
+  standard solution.
+- **Debugging streaming agents is near-impossible.** No equivalent of distributed tracing
+  (Jaeger/Zipkin) designed for continuous streaming agent interactions.
+
+### Cross-Cutting Theme
+
+Agent orchestration in 2025-2026 is where microservices were circa 2012 — before Docker,
+Kubernetes, OpenAPI, or service meshes standardized the primitives. MCP, A2A, and ANP address
+tool connectivity and agent discovery but not the harder problems of safety, cost,
+reproducibility, and evaluation.
+
+---
+
+## 8. Open Research Questions
 
 1. **How do you formally verify that an agent loop will terminate with a correct result?**
    Traditional verification doesn't apply — the state space is unbounded.
@@ -411,7 +519,7 @@ Based on practitioner reports, here's what separates demo agents from production
 
 ---
 
-## 8. Key Takeaways
+## 9. Key Takeaways
 
 **The tooling gap is more important than the model gap.** A mediocre model with excellent
 orchestration outperforms a brilliant model with poor orchestration. Investment in loop
@@ -450,3 +558,14 @@ layering agents onto legacy workflows.
 - [Top 10+ Agentic Orchestration Frameworks & Tools in 2026](https://aimultiple.com/agentic-orchestration)
 - [How the Agent Loop Works — Claude API Docs](https://platform.claude.com/docs/en/agent-sdk/agent-loop)
 - [Checkpointing and Resuming Workflows — Microsoft](https://learn.microsoft.com/en-us/agent-framework/tutorials/workflows/checkpointing-and-resuming)
+- [Why Your Multi-Agent System is Failing — Towards Data Science](https://towardsdatascience.com/why-your-multi-agent-system-is-failing-escaping-the-17x-error-trap-of-the-bag-of-agents/)
+- [Why Multi-Agent LLM Systems Fail — Orq.ai](https://orq.ai/blog/why-do-multi-agent-llm-systems-fail)
+- [The Agent Reproducibility Paradox — DEV Community](https://dev.to/arkforge-ceo/the-agent-reproducibility-paradox-debugging-non-determinism-in-production-ome)
+- [Dynamic AI Agents with Temporal](https://temporal.io/blog/of-course-you-can-build-dynamic-ai-agents-with-temporal)
+- [LLM Cost Optimization — Alexander Thamm](https://www.alexanderthamm.com/en/blog/llm-cost-optimization/)
+- [Agent Cost Optimization with Observability — Galileo](https://galileo.ai/blog/ai-agent-cost-optimization-observability)
+- [LLM Guardrails Best Practices — Datadog](https://www.datadoghq.com/blog/llm-guardrails-best-practices/)
+- [MicroAgents with Semantic Kernel — Microsoft](https://devblogs.microsoft.com/semantic-kernel/microagents-exploring-agentic-architecture-with-microservices/)
+- [Real-Time Bidirectional Streaming Multi-Agent Systems — Google](https://developers.googleblog.com/en/beyond-request-response-architecting-real-time-bidirectional-streaming-multi-agent-system/)
+- [AI Agent Orchestration — Redis](https://redis.io/blog/ai-agent-orchestration/)
+- [AI Agent Orchestration — Deloitte](https://www.deloitte.com/us/en/insights/industry/technology/technology-media-and-telecom-predictions/2026/ai-agent-orchestration.html)
