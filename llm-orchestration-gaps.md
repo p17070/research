@@ -39,6 +39,12 @@ executes it, and loops. Used by Claude Agent SDK, LangChain agents, and most fra
 - No backtracking — once a tool is called, the agent can't undo its effects
 - Prone to "reasoning drift" where the agent loses sight of the original goal over many steps
 - Context window fills up with intermediate observations, degrading performance
+- Token-inefficient: 8 tool calls = 50K-100K tokens (~$0.15-0.30/query at GPT-4o pricing),
+  8-24 seconds latency. For straightforward tasks, direct function calling is faster and cheaper
+- Self-assessment unreliable — exits when it "subjectively thinks complete" rather than when
+  objectively verifiable
+- **Mitigations emerging**: RP-ReAct (planner-executor separation), Ralph Loop (external state
+  via filesystem/Git), self-improving closed-loop training
 
 ### 1.2 Plan-Then-Execute
 Agent creates an upfront plan, then executes steps sequentially. Used by some AutoGen and
@@ -87,6 +93,9 @@ safety rails, not intelligence. The agent doesn't reason about whether it has ac
 - Graceful degradation: returning partial results with confidence estimates instead of
   hard-failing at a budget limit
 - Distinguishing "I'm done" from "I give up" from "I'm spinning"
+- **Root cause**: three issues cover 90% of infinite loops — missing max_turns, termination
+  functions that never return True, and system prompts without clear "done" signals. Each
+  retry is "locally reasonable" but nothing tells the agent it's the 15th retry
 
 ### 2.2 State Management & Persistence
 
@@ -141,8 +150,17 @@ retrying the same call or hallucinating alternative arguments.
   stock, and ship the phantom item — one hallucinated fact triggering a multi-system cascade
 - Production agents ignored stop commands and gave the same response 58-59 times in a loop
 
+**Emerging research:**
+- **AgentErrorTaxonomy** (Zhu et al., Sep 2025): modular classification spanning memory,
+  reflection, planning, action, and system-level operations
+- **AgentDebug** framework: 24% higher accuracy by isolating root-cause failures and providing
+  corrective feedback
+- **12-category error taxonomy** (Huang et al., Jan 2026): covers tool initialization,
+  parameter handling, execution, and result interpretation
+
 **What's missing:**
-- **Structured error taxonomies**: distinguishing "tool is down" from "I called it wrong" from
+- **Structured error taxonomies in frameworks**: the research exists (above) but no production
+  framework has adopted it — distinguishing "tool is down" from "I called it wrong" from
   "this tool can't do what I need"
 - **Fallback strategies**: if tool A fails, try tool B or ask the user — expressed declaratively,
   not hoped-for from the LLM
@@ -187,6 +205,12 @@ different tool call sequences, different intermediate reasoning, and different f
 **The Problem:** Agent loops are token-hungry. Each reasoning step, tool call, and observation
 consumes tokens. Multi-agent systems multiply this. Production costs can be 10-100x what naive
 estimates suggest.
+
+**Cost landscape (2025):** API pricing ranges $0.25-$15/M input tokens, $1.25-$75/M output.
+Cheapest: Gemini Flash-Lite at $0.075/M input. Known optimizations: semantic caching (up to
+73% reduction), prompt caching (90% discount on cache hits), batch APIs (50% discount from
+OpenAI/Anthropic), cascaded model routing (BudgetMLAgent: 94% reduction, $0.931→$0.054/task).
+None of these are built into orchestration frameworks.
 
 **What's missing:**
 - **Cost-aware planning**: agent considers token budget when deciding whether to explore
@@ -463,12 +487,19 @@ Real-time multi-agent systems require streaming-native primitives that don't exi
 - **Debugging streaming agents is near-impossible.** No equivalent of distributed tracing
   (Jaeger/Zipkin) designed for continuous streaming agent interactions.
 
-### Cross-Cutting Theme
+### Cross-Cutting Theme: The Invisible Orchestration Layer
+
+The deepest structural gap: **the orchestration layer is invisible.** No first-class
+abstractions exist for reasoning about, measuring, securing, costing, or debugging the
+orchestration itself — distinct from the models and tools it coordinates. Frameworks provide
+orchestration *mechanisms* but not orchestration *observability, safety, or governance*.
 
 Agent orchestration in 2025-2026 is where microservices were circa 2012 — before Docker,
-Kubernetes, OpenAPI, or service meshes standardized the primitives. MCP, A2A, and ANP address
-tool connectivity and agent discovery but not the harder problems of safety, cost,
-reproducibility, and evaluation.
+Kubernetes, OpenAPI, or service meshes standardized the primitives. Four interoperability
+protocols have emerged — MCP (tool connections), A2A (agent-to-agent), ACP (agent
+communication), ANP (agent network) — but they address connectivity and discovery, not the
+harder problems of safety, cost, reproducibility, and evaluation. And they don't interoperate
+with each other.
 
 ---
 
