@@ -16,6 +16,16 @@ agentic AI projects will be canceled by end-of-2027 due to escalating costs and 
 This document catalogs what's missing, broken, or unsolved in today's orchestration loop
 architectures.
 
+**Key statistics:**
+- MAST study (March 2025): Analyzed 1,642 execution traces across 7 frameworks — failure rates
+  range from 41% to 86.7%
+- NBER study (Feb 2026): 89% of 6,000 surveyed firms reported zero productivity change from AI
+- RAND Corporation: AI projects fail at 2x the rate of traditional IT projects; 80%+ never
+  reach meaningful production
+- Only 2% of organizations have deployed agentic AI at scale; 61% remain stuck in exploration
+- Google DeepMind (Dec 2025): Unstructured multi-agent networks amplify errors up to 17.2x
+  compared to single-agent baselines
+
 ---
 
 ## 1. Orchestration Loop Patterns: The State of Play
@@ -242,21 +252,98 @@ memory system, or plug in a different orchestration strategy.
 
 ---
 
-## 3. The Framework Landscape (March 2026)
+## 3. Emerging Solutions & Research Directions
 
-| Framework | Strengths | Key Gaps |
-|-----------|-----------|----------|
-| **LangGraph** | Stateful, checkpointed, production-proven | Complex API, steep learning curve, Python-only |
-| **Claude Agent SDK** | Clean loop design, extended thinking, MCP native | Newer, smaller ecosystem |
-| **OpenAI Agents SDK** | Simple API, good tool integration | Limited state management, basic orchestration |
-| **CrewAI** | Easy multi-agent setup, role-based agents | Limited persistence, weak error recovery |
-| **AutoGen/MS Agent Framework** | Enterprise Azure integration, multi-language | Still in unification (AutoGen + Semantic Kernel), GA pending |
-| **Temporal + LLM** | Battle-tested durability, exactly-once execution | Not agent-native — requires glue code |
-| **Google ADK** | Loop agents with termination control | Early stage, limited ecosystem |
+### 3.1 Memory Architectures
+
+- **MemGPT / Letta**: Tiered memory mimicking OS memory hierarchy (main context = RAM,
+  external storage = disk), enabling effectively unlimited context
+- **A-MEM (NeurIPS 2025)**: Agentic memory using Zettelkasten method — interconnected
+  knowledge networks through dynamic indexing and linking
+- **AgentRM**: OS-inspired resource management with Multi-Level Feedback Queue scheduler,
+  zombie agent reaping, rate-limit-aware admission control, and three-tier Context Lifecycle
+  Manager. Achieved 100% context retention and eliminated zombie agents in benchmarks
+- **JetBrains Research (NeurIPS 2025)**: Hybrid observation masking + LLM summarization
+  for significant cost reduction
+- **Memory Blocks**: Structuring context into discrete functional units for consistent recall
+
+### 3.2 Multi-Agent Coordination
+
+- **ECON (ICML 2025)**: Hierarchical RL paradigm recasting multi-LLM coordination as a
+  Bayesian Nash Equilibrium game with tighter regret bounds
+- **Evolving Orchestration (NeurIPS 2025)**: "Puppeteer-style" centralized orchestrator
+  trained via RL to adaptively sequence and prioritize agents
+- **BlockAgents**: Blockchain-based coordination with Proof-of-Trust and multi-metric
+  evaluation to mitigate Byzantine behaviors in agent networks
+
+### 3.3 Architectural Patterns
+
+- **Event-driven architecture**: Treat all agent interactions as an event log (not mutable
+  state) — user inputs, LLM chunks, tool calls, interrupts, and UI actions as a single stream
+- **DAG-based decomposition**: Pydantic/JSON Communication Protocols for schema-validated
+  handoffs between agents
+- **Circuit breakers + fallback strategies**: Borrowed from distributed systems — timeout
+  management and automatic failover for LLM-specific failure modes
+- **Async task queues**: Rate limiters with automated token budgets to prevent runaway costs
+- **Stateless-but-iterative design**: Instead of one enormous prompt, repeatedly give fresh
+  bounded prompts for single well-defined tasks — reduces drift and hallucinations
+
+### 3.4 Observability Stack
+
+- **OpenTelemetry convergence**: GenAI SIG defining semantic conventions for Tasks, Actions,
+  Agents, Teams, Artifacts, and Memory
+- **"Observability 2.0"**: Wide Events approach for semi-structured, high-dimensional agent
+  data — shift from system monitoring to semantic quality monitoring
+- **Platforms**: Langfuse (open-source), LangSmith, Braintrust, Vellum (auto execution tracing),
+  Maxim AI, Patronus AI/Percival (identifies 20+ failure modes automatically)
 
 ---
 
-## 4. The Production Readiness Checklist (What Most Teams Are Missing)
+## 4. The Framework Landscape (March 2026)
+
+| Framework | Strengths | Key Gaps | Perf Notes |
+|-----------|-----------|----------|------------|
+| **LangGraph** | Stateful, checkpointed, 600+ integrations | Complex API, steep learning curve | 10,070 prompt tokens / 86s median (sequential) |
+| **Claude Agent SDK** | Clean loop design, extended thinking, MCP native | Newer, smaller ecosystem | — |
+| **OpenAI Agents SDK** | Simple API, managed runtime | Limited state management, basic orchestration | — |
+| **CrewAI** | Easy multi-agent, role-based, A2A support | Limited persistence, 5x cost per task vs single agent | "Managerial Process" causes re-questioning |
+| **AutoGen/MS Agent Framework** | Enterprise Azure, multi-language (C#/Python/Java) | Maintenance mode → unified framework (GA pending) | 47s median (parallel execution) |
+| **Temporal + LLM** | Battle-tested durability, exactly-once, 99.99% SLA | Not agent-native — requires glue code | — |
+| **Google ADK** | Loop agents with termination control | Early stage, limited ecosystem | — |
+
+**Market context:** 68% of production agents are built on open-source frameworks. LangChain
+has 47M+ PyPI downloads. The ecosystem went from academic curiosity to production
+infrastructure in under two years.
+
+---
+
+## 5. Practitioner Pain Points (What People Actually Complain About)
+
+1. **"Agents are like junior developers who don't know when they're over their depth"** —
+   can run 20+ iterations successfully but sometimes need hand-holding after every iteration
+
+2. **The four production breakage points**: auditability (no trace of why), multi-tenancy
+   (contexts leak across customers), observability (hallucinations can't be debugged),
+   cost control (orchestration loops drain budgets)
+
+3. **Enterprise integration**: Average enterprise runs 897 apps (Salesforce MuleSoft 2025).
+   Without seamless handoffs and shared context, workflows stall
+
+4. **"Agent washing"**: Gartner estimates only ~130 of thousands of agentic AI vendors are
+   real. Many rebrand chatbots/RPA as "agentic" without substance
+
+5. **Compounding unreliability**: Even 1% failure per step compounds — a 10-step process at
+   99% per-step = ~90.4% overall success. Unacceptable for production
+
+6. **The Klarna cautionary tale**: Initially touted AI handling 80% of customer interactions,
+   then reverted after complaints about lack of human fallback
+
+7. **Linear loops break with real-world complexity**: Simple loops crumble when you need
+   interrupts, approvals, or queued inputs
+
+---
+
+## 6. The Production Readiness Checklist (What Most Teams Are Missing)
 
 Based on practitioner reports, here's what separates demo agents from production agents:
 
@@ -273,7 +360,7 @@ Based on practitioner reports, here's what separates demo agents from production
 
 ---
 
-## 5. Open Research Questions
+## 7. Open Research Questions
 
 1. **How do you formally verify that an agent loop will terminate with a correct result?**
    Traditional verification doesn't apply — the state space is unbounded.
@@ -307,9 +394,24 @@ Based on practitioner reports, here's what separates demo agents from production
    The EU AI Act (2026) requires documentation and audits for critical AI systems. How do you
    audit an agent that takes different paths every time?
 
+9. **How do you scale multi-agent systems beyond 5 agents?**
+   Current benchmarks cover only 2-5 agents. Scaling to 100+ (AgentsNet) reveals significant
+   performance degradation. Theory of Mind reasoning has "a large room for improvement" (NAACL
+   2025).
+
+10. **How do you prevent error propagation through agent memory?**
+    Misaligned experience replay — where flawed or irrelevant memories are stored and reused —
+    degrades future performance. No robust solutions exist.
+
+11. **What's the 11-layer failure stack?**
+    Lin & Zhang (2025) identify vulnerabilities from hardware/power foundations through adaptive
+    learning to agentic reasoning. Failures rarely occur in isolation but propagate across
+    layers creating cascading systemic consequences. Understanding and hardening each layer
+    is an open problem.
+
 ---
 
-## 6. Key Takeaways
+## 8. Key Takeaways
 
 **The tooling gap is more important than the model gap.** A mediocre model with excellent
 orchestration outperforms a brilliant model with poor orchestration. Investment in loop
