@@ -63,7 +63,9 @@ Multiple specialized agents collaborate via message passing, supervised by an or
 
 **Limitations:**
 - 36.9% failure rate from coordination breakdowns (inter-agent misalignment)
-- Error cascading amplified up to 17.2x across agent boundaries
+- Error cascading amplified up to 17.2x across agent boundaries (Google DeepMind, Dec 2025)
+- **Cognitive bias expansion**: unlike humans who naturally filter information, LLMs amplify
+  errors through agent chains rather than correcting them
 - Debugging distributed agent failures is genuinely hard
 - Cost explosion — each agent maintains its own context, multiplying token usage
 
@@ -118,6 +120,8 @@ observations, tool results, and reasoning traces accumulate until the window is 
 - Abrupt truncation discards potentially important early context
 
 **What's missing:**
+- **Context engineering as a discipline**: deciding "what deserves a spot in front of the model
+  right now" — most teams treat this as an afterthought, not a core design problem
 - **Intelligent context curation**: dynamically selecting what to keep, summarize, or evict
   based on relevance to the *current* subtask (not just recency)
 - **Hierarchical memory**: working memory (current step) + episodic memory (this session) +
