@@ -20,8 +20,8 @@ The agent field is where software engineering was before the 1968 NATO Conferenc
 
 | # | Topic | Academic Papers | Industry Coverage | Status |
 |---|-------|----------------|-------------------|--------|
-| 1 | Agent Design Patterns | 0-1 | Framework docs only | **WHITE SPACE** |
-| 2 | Agent Anti-Patterns | 0 | Practitioner knowledge | **WHITE SPACE** |
+| 1 | Agent Design Patterns | 1 catalog + adjacent | Framework docs + major industry guides | **EMERGING** (revised up) |
+| 2 | Agent Anti-Patterns | 2-3 failure taxonomies | Practitioner knowledge + OWASP ASI | **EMERGING** (revised up) |
 | 3 | Agent Performance Profiling | 3-5 (tangential) | 5+ commercial tools | **EMERGING** (industry-led) |
 | 4 | Agent Refactoring | 0 | DSPy tangentially | **WHITE SPACE** |
 | 5 | Agent Technical Debt | 0 (4+ for ML broadly) | Practitioner knowledge | **WHITE SPACE** |
@@ -36,85 +36,181 @@ The agent field is where software engineering was before the 1968 NATO Conferenc
 
 ## 1. Agent Design Patterns
 
-**Status: WHITE SPACE (0-1 papers)**
+**Status: EMERGING (revised upward from initial assessment)**
 
 ### What Exists
 
-No academic "Gang of Four" equivalent exists for LLM agent architectures. Patterns exist implicitly in frameworks and research papers but have never been formally cataloged, named, or evaluated as design patterns.
+The initial gap analysis rated this as "0-1 papers." Deeper search reveals **one dedicated pattern catalog** and several adjacent papers, though coverage remains thin relative to the number of patterns in practice.
 
-**Closest academic work:**
+**Dedicated pattern catalog:**
+- **"Agent Design Pattern Catalogue"** (Lu et al., CSIRO, Journal of Systems and Software Vol 220, 2024; arXiv:2405.10467) — **18 formalized patterns** with context, forces, and trade-offs. The closest thing to a "Gang of Four" for agents. Published in a software engineering journal.
+
+**Adjacent academic work:**
+- **"Design Patterns for Securing LLM Agents against Prompt Injections"** (arXiv:2506.08837, 2025) — **6 security-specific patterns**: Tool Feedback Prevention, Advance Planning, Dual LLM, Map-Reduce isolation, Constrained Decoding, Guardrails
+- **"Why Do Multi-Agent LLM Systems Fail?"** (arXiv:2503.13657, Cemri et al., 2025) — 14 failure modes categorized; implicitly defines anti-patterns
+- **"Taxonomy of Failure Mode in Agentic AI Systems" (MASFT)** (Microsoft, 2024) — Systematic failure taxonomy
 - **AgentSpec** (ICSE 2026) — specification language for agent behaviors; defines contracts, not patterns
-- **GPTSwarm** (ICML 2024) — graph-based optimization of agent interactions; implicitly uses pipeline/DAG patterns
-- **CAMEL** (NeurIPS 2023) — formalizes role-playing communication pattern between agents
-- **DyLAN** (COLM 2024) — dynamic team formation pattern for multi-agent collaboration
+- **GPTSwarm** (ICML 2024) — graph-based optimization of agent interactions
+- **CAMEL** (NeurIPS 2023) — formalizes role-playing communication pattern
+- **DyLAN** (COLM 2024) — dynamic team formation pattern
+- **"System Architecture for Agentic LLMs"** (Tianjun Zhang, UC Berkeley PhD thesis, 2025) — covers training, deployment, safety architectures
+- **AgenticSE Workshop** (ASE 2025, Seoul) — First international workshop on Autonomous Agents in Software Engineering
 
-**Framework-embedded patterns (no academic treatment):**
+**Major industry pattern guides:**
+- **Anthropic** — prompt chaining, routing, parallelization, orchestrator-worker, evaluator-optimizer
+- **Google Cloud Architecture Center** — 8 essential multi-agent patterns
+- **Microsoft Azure Architecture** — event-driven patterns, state management
+- **Confluent** — 4 event-driven multi-agent patterns
 
-| Pattern | Description | Where It Lives | Papers as "Pattern" |
+### Comprehensive Pattern Taxonomy
+
+**A. Reasoning & Execution Patterns**
+
+| Pattern | Description | Academic Source | Industry Adoption |
 |---------|-------------|---------------|-------------------|
-| ReAct Loop | Reason → Act → Observe cycle | Original paper → all frameworks | 1 (original only) |
-| Reflexion | Self-critique and retry | Original paper → LangGraph | 1 (original only) |
-| Supervisor | Central agent delegates to workers | LangGraph, AutoGen | 0 |
-| Swarm | Decentralized peer agents | OpenAI Swarm, LangGraph | 0 |
-| Router | Agent routes to specialized sub-agents | LangGraph, Semantic Kernel | 0 |
-| Map-Reduce | Parallel processing with aggregation | LangGraph | 0 |
-| Plan-and-Execute | Separate planning from execution | LangGraph, BabyAGI | 1-2 |
-| Human-in-the-Loop Gate | Checkpoint requiring human approval | All frameworks | 0 |
-| Memory-Augmented | Agent with persistent memory store | MemGPT, various | 1-2 |
-| Guardian/Validator | Separate agent validates output | Industry practice | 0 |
-| Self-Healing | Agent retries/recovers on failure | Industry practice | 0 |
-| Tool-Use Pipeline | Sequential tool calling with verification | All frameworks | 0 |
-| Debate/Adversarial | Agents argue to improve output | Research papers | 2-3 (not as "pattern") |
-| Ensemble/Voting | Multiple agents vote on answer | Research papers | 2-3 (not as "pattern") |
+| ReAct | Reason → Act → Observe cycle | Original paper (2022) | All frameworks |
+| Reflexion | Self-critique + retry with memory | Original paper (2023) | LangGraph, others |
+| ReWOO | Plan upfront, execute without re-calling LLM | arXiv:2305.18323 | IBM, PromptLayer |
+| Tree-of-Thoughts | Explore multiple reasoning paths simultaneously | Original paper (2023) | Research use |
+| Chain-of-Thought | Step-by-step reasoning before answering | Original paper (2022) | All frameworks |
+| PreAct | Prediction step before planning | ACL 2025 (COLING) | Early |
+| Plan-and-Execute | Separate planning from execution | 1-2 papers | LangGraph, BabyAGI |
+| Self-Consistency | Generate multiple paths, vote on best | Original paper (2022) | Research use |
+
+**B. Multi-Agent Orchestration Patterns**
+
+| Pattern | Description | Academic Source | Industry Adoption |
+|---------|-------------|---------------|-------------------|
+| Supervisor/Orchestrator | Central agent delegates to workers | Lu et al. catalog | LangGraph, AutoGen |
+| Sequential Pipeline | Output of agent N → input of agent N+1 | Lu et al. catalog | Swarms, AWS |
+| Debate/Council | Agents argue, judge synthesizes | 2-3 papers | Swarms, MongoDB |
+| Peer-to-Peer Mesh | Direct agent communication via message bus | 0 papers | Confluent, InfoWorld |
+| Event-Driven | Agents react to event streams (Kafka) | 0 papers | Confluent, Azure |
+| Hierarchical/Tree | Multi-level delegation (strategy → tactics → execution) | 0 papers | Confluent |
+| Swarm | Decentralized, independent specialized agents | 0 papers | OpenAI Swarm, Swarms.ai |
+| Chain-of-Agents | Sequential chunk processing for long context | Google (NeurIPS 2024) | Google Research |
+| Evaluator-Optimizer | Generator + evaluator in loop | Anthropic blog | LangGraph |
+| Routing | Classify input, direct to specialist | Anthropic blog | LangGraph, Semantic Kernel |
+| Parallelization | Execute independent tasks concurrently | Anthropic blog | All frameworks |
+| Map-Reduce | Parallel processing with aggregation | 0 as named pattern | LangGraph |
+
+**C. Memory & State Patterns**
+
+| Pattern | Description | Academic Source | Industry Adoption |
+|---------|-------------|---------------|-------------------|
+| Memory-Augmented Agent | Persistent memory store (episodic/semantic) | MemGPT (1-2 papers) | AWS Bedrock, MongoDB |
+| Context Window Management | Three-tier: short-term, long-term, external | 0 papers | All frameworks |
+| Token Caching | Reuse cached tokens (75% cheaper) | 0 papers | Provider APIs |
+| Immutable Event Log | Permanent event record as source of truth | 0 papers | Confluent (Kafka) |
+| External State Persistence | Durable state for long-running tasks | 0 papers | Azure, Redis |
+| Context Compression | Smart summaries to cut token usage 40-50% | 0 papers | Industry practice |
+
+**D. Safety & Security Patterns**
+
+| Pattern | Description | Academic Source | Industry Adoption |
+|---------|-------------|---------------|-------------------|
+| Tool Feedback Prevention | Agent can't see tool outputs (immune to injection) | arXiv:2506.08837 | Research |
+| Advance Planning | Plan tool calls before exposure to untrusted content | arXiv:2506.08837 | Research |
+| Dual LLM | Privileged LLM coordinates quarantined LLM | arXiv:2506.08837 | Research |
+| Guardian/Validator | Separate agent validates output | 0 papers | Industry practice |
+| Human-in-the-Loop Gate | Checkpoint requiring human approval | 0 as pattern | All frameworks |
+| Constrained Decoding | Enforce output format/content constraints | arXiv:2506.08837 | Guardrails frameworks |
+
+**E. Modular Architecture Patterns**
+
+| Pattern | Description | Academic Source | Industry Adoption |
+|---------|-------------|---------------|-------------------|
+| Agent Skills | Modular capability packages with lazy loading | arXiv:2602.12430 | Anthropic, Microsoft |
+| Skills-as-Filesystem | Skills as directories with instructions + code | 0 papers | Anthropic Claude |
+| Prompt Chaining | Sequential prompts, output → input | Anthropic blog | All frameworks |
+| Self-Healing | Agent retries/recovers on failure | 0 papers | Industry practice |
 
 ### What's Missing
 
-A formal pattern catalog would need to:
-1. **Name and define** each pattern (intent, motivation, applicability, structure, participants, consequences)
-2. **Classify** patterns by category (structural, behavioral, orchestration, safety)
-3. **Provide selection guidance** — when to use which pattern and why
-4. **Document trade-offs** — performance, cost, reliability implications
-5. **Show composition rules** — which patterns combine well, which conflict
-6. **Include empirical evaluation** — benchmarked comparisons across task types
+Lu et al.'s catalog (18 patterns) is a strong start but gaps remain:
+
+1. **Selection guidance** — When to use which pattern? No decision framework exists. Practitioners rely on intuition.
+2. **Composition rules** — Which patterns combine well? Supervisor + Reflexion? Swarm + Event-Driven? No formal analysis.
+3. **Empirical evaluation** — No controlled experiments comparing patterns on standardized benchmarks. Which pattern works best for which task type?
+4. **Cost/performance trade-offs** — Each pattern has different token, latency, and reliability profiles. No systematic comparison.
+5. **Evolution guidance** — How should patterns change as LLMs improve? ReAct may become unnecessary as models internalize reasoning.
+6. **Framework-agnostic specification** — Patterns are described in framework-specific terms. No universal pattern language.
+7. **Many patterns remain unformalized** — ~20 patterns in the taxonomy above have 0 academic papers treating them as named patterns (event-driven, context compression, token caching, self-healing, etc.)
 
 ### Forward Research Directions
 
-1. **"Design Patterns for LLM Agents"** — A systematic catalog of 20-30 patterns with formal GoF-style structure. This is arguably the single highest-impact paper that could be written in this space.
-2. **Pattern mining from frameworks** — Systematic extraction and comparison of patterns across LangGraph, CrewAI, AutoGen, Semantic Kernel, and others.
-3. **Pattern composition theory** — Formal analysis of how patterns interact. Some combinations (e.g., Supervisor + Swarm) may be incompatible or create emergent behaviors.
-4. **Empirical pattern evaluation** — Controlled experiments comparing patterns on standardized benchmarks (SWE-bench, WebArena, GAIA) to answer: which pattern works best for which task type?
-5. **Pattern evolution** — How should patterns change as underlying LLM capabilities improve? ReAct may become unnecessary as models internalize reasoning.
+1. **Pattern selection framework** — Decision tree or flowchart: given task characteristics (complexity, safety requirements, latency budget, cost constraints), which pattern(s) to use?
+2. **Empirical pattern evaluation** — Controlled experiments comparing patterns on SWE-bench, WebArena, GAIA. Answer: which pattern works best for which task type, and at what cost?
+3. **Pattern composition theory** — Formal analysis of pattern interactions. Some combinations may be incompatible (Supervisor + Swarm?) or create emergent behaviors.
+4. **Pattern mining from frameworks** — Systematic extraction and comparison across LangGraph, CrewAI, AutoGen, Semantic Kernel.
+5. **Pattern evolution** — How should patterns change as LLM capabilities improve? Longitudinal study.
+6. **Cost-aware pattern design** — Patterns optimized for token efficiency (ReWOO's 5x improvement over ReAct suggests this is tractable).
 
 ---
 
 ## 2. Agent Anti-Patterns
 
-**Status: WHITE SPACE (0 papers)**
+**Status: EMERGING (revised upward — 2-3 papers with failure taxonomies)**
 
 ### What Exists
 
-No academic catalog of agent anti-patterns exists. However, failure analysis papers implicitly identify recurring failure modes that function as anti-patterns:
+Two significant failure taxonomy papers now exist, though neither frames findings as a formal "anti-pattern catalog" with detection/remediation guidance:
 
-- **"Spark to Fire: Error Propagation in Multi-Agent Systems"** (Mar 2026) — documents cascading failure modes
-- **"Agent Error Taxonomy"** — classifies error types but doesn't frame them as anti-patterns with refactoring guidance
-- **MAST** — multi-agent stress testing reveals failure patterns under load
+- **"Why Do Multi-Agent LLM Systems Fail?"** (arXiv:2503.13657, Cemri et al., 2025) — **14 failure modes** categorized. Key finding: **79% of multi-agent system failures originate from specification and coordination issues**, not technical implementation.
+- **"Taxonomy of Failure Mode in Agentic AI Systems" (MASFT)** (Microsoft, 2024) — Systematic failure taxonomy covering system design flaws, inter-agent misalignment, and task verification failures.
+- **"Spark to Fire: Error Propagation in Multi-Agent Systems"** (Mar 2026) — Documents cascading failure modes and amplification through feedback loops.
+- **OWASP Agentic Security Initiative (ASI)** — Emerging threat catalog including ASI08 (Cascading Failures).
 
-### Known Anti-Patterns (Practitioner Knowledge Only)
+### Comprehensive Anti-Pattern Catalog
 
-| Anti-Pattern | Description | Consequence | Detection Signal |
-|-------------|-------------|-------------|-----------------|
-| **Infinite Loop** | Agent repeats same action without progress | Resource waste, timeout | Same tool call repeated 3+ times |
-| **Hallucination Cascade** | Agent acts on hallucinated info, causing downstream errors | Corrupted state, wrong outputs | Actions on non-existent entities |
-| **Tool Abuse** | Agent calls tools unnecessarily or incorrectly | Cost explosion, errors | Tool calls with no effect on task |
-| **Context Window Stuffing** | Agent fills context with irrelevant information | Quality degradation, cost | Context utilization vs. task relevance |
-| **Premature Commitment** | Agent commits to plan without exploring alternatives | Suboptimal solutions | No branching in planning phase |
-| **Over-Delegation** | Supervisor delegates everything, adds no value | Latency, cost, no quality control | Supervisor with 0 direct actions |
-| **Echo Chamber** | Multiple agents reinforce each other's errors | Confident wrong answers | Unanimous agreement without verification |
-| **Capability Overestimation** | Agent attempts tasks beyond its abilities | Failures, partial work | Task acceptance without capability check |
-| **Retry Storm** | Agent retries failed actions without changing approach | Resource waste | Same error repeated with same strategy |
-| **Gold Plating** | Agent over-elaborates or adds unnecessary features | Wasted effort, scope creep | Output complexity >> input complexity |
-| **Monolithic Agent** | Single agent handles everything instead of decomposing | Fragility, context overflow | System prompt > 2000 tokens, 10+ tools |
-| **Phantom Progress** | Agent reports progress but makes none (verbose reasoning, no action) | Time waste | High token output, low action count |
+**A. Architectural Anti-Patterns**
+
+| Anti-Pattern | Description | Evidence | Detection Signal |
+|-------------|-------------|----------|-----------------|
+| **Over-Engineering** | Complex multi-agent setup for simple problem | 41-86.7% of MAS fail in production (MASFT) | Multi-agent where single agent suffices |
+| **Agent Sprawl** | Dozens of micro-agents with overlapping scope | Industry reports | Recursive logic, unintended interactions |
+| **Monolithic Agent** | Single agent handles everything | Practitioner knowledge | System prompt >2000 tokens, 10+ tools |
+| **Circular Dependencies** | Agents create deadlock patterns | arXiv:2503.13657 | Token consumption without progress |
+
+**B. Specification & Prompt Anti-Patterns**
+
+| Anti-Pattern | Description | Evidence | Detection Signal |
+|-------------|-------------|----------|-----------------|
+| **Specification Ambiguity** | Vague instructions agent can't interpret | 79% of MAS failures (Cemri et al.) | Agents exploring all interpretations |
+| **Overloaded Prompts** | Too many tasks in single prompt | Practitioner knowledge | Missed tasks, quality degradation |
+| **Instruction Layering** | Accumulated patches to system prompt | Practitioner knowledge | Prompt fragility on edge cases |
+| **Metadata-Based Instructions** | Using API names instead of semantic descriptions | Elements.cloud | Agent can't map instructions to actions |
+| **Prompt Overfitting** | Prompt too rigid, fails on variations | Prompt engineering research | High benchmark score, low real-world quality |
+
+**C. Failure Cascade Anti-Patterns**
+
+| Anti-Pattern | Description | Evidence | Detection Signal |
+|-------------|-------------|----------|-----------------|
+| **Hallucination Cascade** | Hallucinated info propagates downstream | MASFT, "Spark to Fire" | Actions on non-existent entities |
+| **Infinite Loop** | Same action repeated without progress | Widely observed | Same tool call 3+ times |
+| **Retry Storm** | Retries without changing approach | Industry observation | Same error with same strategy |
+| **Tool Abuse** | Unnecessary or incorrect tool calls | Benchmark observations | Tool calls with no task effect |
+| **Echo Chamber** | Agents reinforce each other's errors | Multi-agent research | Unanimous agreement without verification |
+
+**D. State & Resource Anti-Patterns**
+
+| Anti-Pattern | Description | Evidence | Detection Signal |
+|-------------|-------------|----------|-----------------|
+| **State Sync Failure** | Race conditions in shared state | Production reports | Duplicate operations, lost updates |
+| **Context Window Stuffing** | Irrelevant information fills context | Practitioner knowledge | Relevance ratio drops below threshold |
+| **Cost Explosion** | Unmonitored token waste | 40-70% savings possible | Retry loops, redundant context passing |
+| **In-Memory Overload** | No external persistence for long tasks | Architecture guides | Data loss on interruption |
+
+**E. Process Anti-Patterns**
+
+| Anti-Pattern | Description | Evidence | Detection Signal |
+|-------------|-------------|----------|-----------------|
+| **Premature Commitment** | Agent commits to plan without exploring | Planning research | No branching in planning phase |
+| **Over-Delegation** | Supervisor delegates everything | Multi-agent observation | Supervisor with 0 direct actions |
+| **Capability Overestimation** | Agent attempts tasks beyond ability | Related to metacognition gap | Acceptance without capability check |
+| **Gold Plating** | Over-elaboration beyond requirements | Coding agent observation | Output complexity >> input complexity |
+| **Phantom Progress** | Verbose reasoning, no action | Industry observation | High token output, low action count |
+| **Reactive Monitoring** | Log-based instead of structured tracing | Observability research | Can't trace errors to specific step |
 
 ### What's Missing
 
