@@ -23,18 +23,21 @@ We then organized findings from "most missing" to "least missing."
 | Topic | Papers | Status | Notes |
 |-------|--------|--------|-------|
 | Agent rollback / undo / reversibility | 0 | **WHITE SPACE** | No academic work on reversible agent actions. Only industry guides. |
-| Agent garbage collection / resource cleanup | 0 | **WHITE SPACE** | No work on cleanup after agent execution completes or fails |
+| Agent garbage collection / resource cleanup | 1 | **MINIMAL** | AgentRM (arXiv:2603.13110, Mar 2026) — zombie reaping, context lifecycle manager. Only paper |
 | Agent idempotency | 0 | **WHITE SPACE** | No work on ensuring repeated agent actions produce same result |
 | Agent rate limiting / throttling | 0 | **WHITE SPACE** | No academic work; only framework-level implementation |
-| Agent credential management / auth | 0-1 | **WHITE SPACE** | Security papers exist but none on agent-specific credential lifecycle |
+| Agent credential management / auth | 3-5 | **EMERGING** | OAuth extensions (arXiv:2501.09674), DID+VC (arXiv:2511.02841), IETF draft (Mar 2026) |
 | Agent state management / checkpointing | 1-2 | **MINIMAL** | SagaLLM (VLDB), LoCoBench-Agent. Mostly framework features, not research |
 | Agent versioning / lifecycle | 1-2 | **MINIMAL** | One dedicated paper (ACM 2025). Mostly industry guidance |
 | Agent interruption / pause-resume | 1-2 | **MINIMAL** | AIOS includes interrupt mechanism. "Safely Interruptible Agents" is RL-focused |
 | Agent caching / memoization | 1-2 | **MINIMAL** | Agentic Plan Caching (APC) is the only dedicated work |
-| Agent sandboxing / isolation | 2-3 | **EMERGING** | Some overlap with safety; dedicated isolation work is thin |
+| Agent sandboxing / isolation | 8+ | **ESTABLISHED** | CELLMATE, Fault-Tolerant Sandboxing, ASB (ICLR 2025), RedCodeAgent (ICLR 2026). Most mature sub-topic |
 | Agent debugging / observability | 3-5 | **EMERGING** | AgentOps, CHI 2025 papers. Growing but still early |
 | Agent deployment / serving | 3-5 | **EMERGING** | AIOS, Pie (SOSP '25). Mostly subsumed into systems papers |
+| Agent resource limits / budget constraints | 7+ | **ESTABLISHED** | BATS, TALE (ACL 2025), BudgetThinker, Self-Resource Allocation. Very active |
+| Agent error propagation / cascade failure | 5+ | **ESTABLISHED** | AgentErrorTaxonomy, "Spark to Fire" (Mar 2026), MAST. Active |
 | Agent latency optimization | 6+ | **ESTABLISHED** | SPAgent, Astraea, AgentTaxo, Pie. Active area |
+| Agent audit trail / provenance | 3-5 | **EMERGING** | Hash-chain audit (MDPI 2025), PROV-AGENT (W3C PROV), Verifiability-First Agents |
 
 ---
 
@@ -127,10 +130,8 @@ These topics have **zero dedicated academic papers** as of March 2026:
 
 ### Runtime & Infrastructure
 1. **Agent rollback / undo / reversibility** — No framework for undoing agent actions
-2. **Agent garbage collection / resource cleanup** — No work on post-execution cleanup
-3. **Agent idempotency** — No work on ensuring repeated actions produce same results
-4. **Agent rate limiting** — No academic treatment; only framework-level
-5. **Agent credential lifecycle** — No agent-specific auth/credential management
+2. **Agent idempotency** — No work on ensuring repeated actions produce same results (1-2 architecture papers mention it tangentially)
+3. **Agent rate limiting** — No academic treatment; only framework-level
 
 ### Formal Properties & Semantics
 6. **Agent type system** — No type systems for agent action spaces
