@@ -45,12 +45,14 @@ We then organized findings from "most missing" to "least missing."
 
 | Topic | Papers | Status | Notes |
 |-------|--------|--------|-------|
-| Agent SLA / reliability engineering | 0 | **WHITE SPACE** | No academic work on SLAs, uptime guarantees, or reliability targets for agents |
-| Agent backward compatibility / migration | 0 | **WHITE SPACE** | No work on upgrading agents without breaking downstream consumers |
-| Agent multi-tenancy | 0 | **WHITE SPACE** | No work on shared agent infrastructure serving multiple users/orgs |
-| Agent regression testing | 0-1 | **WHITE SPACE** | "Automated Structural Testing of LLM-Based Agents" (Jan 2026) is the closest |
+| Agent backward compatibility / migration (LLM agents) | 0 | **WHITE SPACE** | Mobile agent migration papers exist (3-5) but LLM agent upgrades have 0 papers |
+| Agent multi-tenancy | 1-2 | **MINIMAL** | Mostly industry whitepapers (AWS). Very thin academically |
+| Agent data privacy (agent-specific) | 0 | **WHITE SPACE** | AI privacy broadly is mature; agent-specific PII handling has 0 papers |
+| Agent graceful degradation / circuit breaker | 1-2 | **MINIMAL** | No peer-reviewed work specific to LLM agents; only practitioner blogs |
+| Agent regression testing | 3-5 | **EMERGING** | Empirical study of testing practices (Sept 2025), multi-agent testing (Jan 2026) |
 | Agent cost model / economics | 3-5 | **EMERGING** | "Efficient Agents" (2025), AgentTaxo, COALESCE. Growing but thin |
 | Agent testing frameworks | 3-5 | **EMERGING** | Recent surge (2025-2026). Testing pyramid for agents proposed |
+| Agent monitoring / SLA / reliability | 6+ | **ESTABLISHED** | AgentSLA (Nov 2025), "Science of Agent Reliability" (Princeton, Feb 2026). Active |
 
 ---
 
@@ -156,6 +158,8 @@ These topics have **zero dedicated academic papers** as of March 2026:
 21. **Agent incident response** — No academic treatment
 22. **Agent capacity planning** — No resource prediction for agent workloads
 23. **Agent development methodology** — No software engineering methodology for agents
+24. **Agent backward compatibility / LLM agent migration** — Mobile agent migration studied; LLM agent upgrades have 0 papers
+25. **Agent-specific data privacy / PII handling** — AI privacy is mature broadly; agent-specific governance has 0 papers
 
 ### Cognition
 24. **Agent metacognition** — "I should stop and ask" behavior unstudied
@@ -176,10 +180,32 @@ These topics have only **1-2 dedicated papers**:
 6. **Agent determinism / reproducibility** — Acknowledged but unsolved
 7. **Agent collusion detection** — Risk identified but no solutions
 8. **Agent consent frameworks** — No formal per-action authorization
-11. **Agent graceful degradation** — Industry patterns only
-12. **Agent goal inference / disambiguation** — Agents rarely ask clarifying questions
-13. **Agent self-monitoring** — Beyond Reflexion, very thin
-14. **Agent calibrated confidence** — Agent-level confidence unstudied
+11. **Agent graceful degradation / circuit breaker** — No peer-reviewed work for LLM agents; only blogs
+12. **Agent multi-tenancy** — Mostly industry whitepapers
+13. **Agent goal inference / disambiguation** — Agents rarely ask clarifying questions
+14. **Agent self-monitoring** — Beyond Reflexion, very thin
+15. **Agent calibrated confidence** — Agent-level confidence unstudied
+
+---
+
+---
+
+## SURPRISE FINDINGS: Areas That Are Better Covered Than Expected
+
+These topics were initially hypothesized to be gaps but turned out to have significant academic coverage:
+
+| Topic | Expected | Actual | Key Papers |
+|-------|----------|--------|------------|
+| Agent scheduling/priority | Minimal | 6+ papers | Agent.xpu, Astraea (NP-hard proof), PROSERVE, Llumnix (OSDI '24) |
+| Agent trust calibration | Thin | 5+ papers | CHI 2025 (N=248), TCMM, TrustAgent (EMNLP '24) |
+| Agent conflict resolution | Minimal | 5+ papers | ACL 2025, KARMA (NeurIPS '25), shared memory conflicts |
+| Agent delegation/handoff | Emerging | 5+ papers | COMMAND (game-theoretic), DyLAN (COLM '24) |
+| Agent sandboxing/isolation | Emerging | 8+ papers | CELLMATE, RedCodeAgent (ICLR '26), ASB (ICLR '25) |
+| Agent budget constraints | Unknown | 7+ papers | BATS, TALE (ACL '25), BudgetThinker |
+| Agent SLA/reliability | None | 6+ papers | AgentSLA (Nov '25), "Science of Agent Reliability" (Princeton, Feb '26) |
+| Human-agent teaming | Moderate | 15+ papers | CHI 2022, Management Science, field experiments (N=2,234) |
+| Agent self-improvement | Thin | 6+ papers | MetaAgent, SMART (ICLR '25), Darwin Gödel Machine |
+| Prompt injection defense | Emerging | 7+ papers | CaMeL, PromptArmor, multi-agent defense pipelines |
 
 ---
 
