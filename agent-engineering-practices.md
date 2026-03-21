@@ -22,13 +22,13 @@ The agent field is where software engineering was before the 1968 NATO Conferenc
 |---|-------|----------------|-------------------|--------|
 | 1 | Agent Design Patterns | 1 catalog + adjacent | Framework docs + major industry guides | **EMERGING** (revised up) |
 | 2 | Agent Anti-Patterns | 2-3 failure taxonomies | Practitioner knowledge + OWASP ASI | **EMERGING** (revised up) |
-| 3 | Agent Performance Profiling | 3-5 (tangential) | 5+ commercial tools | **EMERGING** (industry-led) |
-| 4 | Agent Refactoring | 0 | DSPy tangentially | **WHITE SPACE** |
+| 3 | Agent Performance Profiling | 7+ (AgentTaxo, AgentDiet, OPTIMA, TokenOps, TALE) | 5+ commercial tools | **ESTABLISHED** (revised up) |
+| 4 | Agent Refactoring | 0 (agents-as-refactoring-tools exist, not refactoring agents) | DSPy tangentially | **WHITE SPACE** |
 | 5 | Agent Technical Debt | 0 (4+ for ML broadly) | Practitioner knowledge | **WHITE SPACE** |
 | 6 | Agent Documentation Standards | 0 (3+ for models) | Model/system cards | **WHITE SPACE** |
-| 7 | Agent Development Methodology | 0-1 | 2-3 blog posts | **WHITE SPACE** |
-| 8 | Agent CI/CD | 2-3 (tangential) | 6+ commercial tools | **EMERGING** (industry-led) |
-| 9 | Agent A/B Testing | 0 | Shadow mode in practice | **WHITE SPACE** |
+| 7 | Agent Development Methodology | 3-5 (ADLC, Promptware Eng., Spec-Driven Dev.) | Sierra, Microsoft, blog posts | **EMERGING** (revised up) |
+| 8 | Agent CI/CD | 3-5 (AI-augmented pipelines, LangSmith CI/CD) | 8+ commercial tools | **EMERGING** (revised up) |
+| 9 | Agent A/B Testing | 1 (AgentA/B, April 2025) | Langfuse, Dynatrace | **MINIMAL** (revised up) |
 | 10 | Agent Incident Response | 0 (3+ for AI broadly) | AI Incident Database | **WHITE SPACE** |
 | 11 | Agent Capacity Planning | 0 (5+ for LLM serving) | Pricing/routing tools | **WHITE SPACE** |
 
@@ -230,26 +230,38 @@ Two significant failure taxonomy papers now exist, though neither frames finding
 
 ## 3. Agent Performance Profiling
 
-**Status: EMERGING (3-5 tangential papers, 5+ industry tools)**
+**Status: ESTABLISHED (revised upward — 7+ papers, 5+ industry tools)**
 
-This is one of two topics in Dimension 6 where industry has significantly outpaced academia.
+This topic has significantly more academic coverage than initially assessed. A wave of 2025 papers addresses token profiling, trajectory optimization, and cost-aware evaluation.
 
 ### Academic Papers
 
-1. **"Efficient Agents: A Systematic Multi-Agent Framework for Optimizing LLM Token Consumption"** (arXiv, 2025)
-   - Proposes multi-agent framework specifically for reducing token consumption. Includes analysis of where tokens are spent across agent operations.
+1. **"AgentTaxo: Dissecting and Benchmarking Token Distribution of LLM Multi-Agent Systems"** (ICLR 2025 Workshop on Foundation Models in the Wild, Mar 2025; arXiv)
+   - **First systematic benchmark for token distribution in multi-agent systems.** Categorizes agent roles (Planner, Reasoner, Verifier) and identifies a "communication tax" from duplicated tokens. Key finding: **input tokens outnumber output 2:1 to 3:1; verification phases consume up to 72% of tokens.** Analyzes MetaGPT, CAMEL, AgentVerse.
 
-2. **"AgentTaxo: Benchmarking LLM Agent Systems with Comprehensive Task Taxonomy"** (2025)
-   - Provides taxonomic analysis of agent task performance including efficiency metrics. Breaks down performance across task types.
+2. **"AgentDiet: Improving the Efficiency of LLM Agent Systems through Trajectory Reduction"** (arXiv:2509.23586, Sept 2025)
+   - Demonstrates that **useless, redundant, and expired information is widespread in agent trajectories.** Designs automatic waste removal from multi-turn histories, reducing token consumption without degrading performance.
 
-3. **"SPAgent: Adaptive Task Decomposition and Model Selection for General-Purpose LLM Agents"** (2025)
-   - Analyzes agent efficiency through adaptive model routing — using cheaper models for simpler sub-tasks. Implicitly profiles where complexity lives.
+3. **"OPTIMA: Optimizing Effectiveness and Efficiency for LLM-Based Multi-Agent Systems"** (ACL 2025 Findings)
+   - Iterative generate-rank-select-train paradigm with a reward function balancing task performance against efficiency.
 
-4. **"BATS: Budget-Aware Task Scheduling for Multi-Agent Systems"** (2025)
-   - Models token consumption and latency across agent workflows. Provides profiling data for budget optimization.
+4. **"TokenOps: A Compiler-Style Architecture for Token Optimization"** (2025)
+   - Treats LLMs as programmable compute layers with a compiler-style approach. **Achieves 40-46% token reduction without loss of task fidelity.**
 
-5. **"TALE: Token-Aware LLM Evaluation"** (ACL 2025)
-   - Evaluation framework that accounts for token consumption alongside task performance. First step toward efficiency-aware benchmarking.
+5. **"Efficient Agents: Building Effective Agents While Reducing Cost"** (arXiv:2508.02694, 2025)
+   - Introduces **cost-of-pass metric** (dollars-per-successful-task-completion) rather than raw accuracy. Evaluates agents on both accuracy and token-based cost.
+
+6. **"TokenPowerBench: Benchmarking the Power Consumption of LLM Inference"** (arXiv:2512.03024, Dec 2025)
+   - First open-source framework coupling phase-aware power telemetry with token-level normalization. Profiles 15+ LLMs across batch size, context length, and quantization.
+
+7. **"TALE: Token-Budget-Aware LLM Reasoning"** (ACL 2025 Findings)
+   - Estimates reasonable token budgets per reasoning step to balance accuracy with consumption.
+
+8. **"SPAgent: Adaptive Task Decomposition and Model Selection"** (2025)
+   - Agent efficiency through adaptive model routing — cheaper models for simpler sub-tasks.
+
+9. **"BATS: Budget-Aware Task Scheduling for Multi-Agent Systems"** (2025)
+   - Token consumption and latency models across agent workflows.
 
 ### Industry Profiling Tools
 
@@ -262,21 +274,30 @@ This is one of two topics in Dimension 6 where industry has significantly outpac
 | **OpenLLMetry** (Traceloop) | OpenTelemetry for LLMs | Standardized telemetry using OpenTelemetry conventions |
 | **W&B Weave** | Experiment tracking | Traces and evaluates LLM apps with cost tracking |
 
+### Key Finding: The "Communication Tax"
+
+AgentTaxo, AgentDiet, and OPTIMA collectively reveal that **multi-agent systems waste 40-70% of tokens** on:
+- Redundant context passing between agents
+- Verification overhead (up to 72% of total tokens)
+- Expired/stale information in conversation histories
+- Duplicated instructions across agent roles
+
+The **cost-of-pass metric** (Efficient Agents) is emerging as the standard: dollars-per-successful-task-completion, not raw accuracy.
+
 ### What's Missing
 
-- **No formal profiling methodology** — No equivalent of CPU/memory profiling discipline for agents
-- **No standard efficiency metrics** — tokens-per-task? latency-per-decision? cost-per-successful-outcome? No consensus
-- **No optimization strategies from profiles** — Industry tools show raw data but no analysis frameworks for acting on it
-- **No academic benchmarking** of profiling tools themselves
-- **No agent flamegraph equivalent** — Visual representation of where an agent spends its token/time budget
+- **No formal profiling methodology** — No equivalent of Brendan Gregg's systems performance methodology for agents
+- **No agent flamegraph equivalent** — Visual representation of token/time/cost consumption across execution trees
+- **No profile-guided optimization** — Tools show waste but don't automatically fix it (AgentDiet is a start)
+- **No standard efficiency benchmarks** — Existing benchmarks (SWE-bench, WebArena) don't have efficiency tracks
 
 ### Forward Research Directions
 
-1. **Agent profiling methodology** — Formal framework: what to measure, how to measure, how to interpret (analogous to Brendan Gregg's systems performance methodology)
-2. **Standard efficiency metrics** — Community consensus on agent efficiency measures, enabling cross-system comparison
-3. **Profile-guided optimization** — Using profiling data to automatically optimize agent architectures (cache frequent tool calls, skip unnecessary reasoning steps, route to cheaper models)
-4. **Agent flamegraphs** — Visual tools showing hierarchical token/time/cost consumption across agent execution trees
-5. **Efficiency benchmarks** — Extend existing benchmarks (SWE-bench, WebArena) with efficiency tracks that penalize waste
+1. **Agent flamegraphs** — Visual tools showing hierarchical token/time/cost consumption, enabling "hot spot" identification like CPU flamegraphs
+2. **Profile-guided optimization** — Extend AgentDiet/TokenOps to automatically restructure agent architectures based on profiling data
+3. **Efficiency-augmented benchmarks** — Add efficiency tracks to SWE-bench, WebArena, GAIA that penalize token waste
+4. **Communication tax reduction** — Protocols for inter-agent communication that minimize token duplication (the 2:1-3:1 input:output ratio suggests massive waste in context passing)
+5. **Real-time profiling** — Live dashboards that show token budget burn rate and predict whether budget will be exceeded before task completion
 
 ---
 
@@ -428,48 +449,72 @@ No academic work proposes these mappings. Drawing from Fowler (1999):
 
 ## 7. Agent Development Methodology
 
-**Status: WHITE SPACE (0-1 papers)**
+**Status: EMERGING (revised upward — 3-5 papers/frameworks)**
 
 ### What Exists
 
-1. **"Software Engineering for AI-Based Systems: A Systematic Mapping Study"** (Martínez-Fernández et al., JSS 2020)
-   - Systematic review of SE practices for AI broadly. Identifies gaps in requirements engineering, design, testing, and maintenance. Foundational but not agent-specific.
+**Dedicated methodology proposals:**
 
-2. **AgentSpec** (ICSE 2026)
-   - Specification language for monitoring agent behavior. Implies a methodology where specs are written before deployment, but doesn't propose a full methodology.
+1. **"The Agent Development Life Cycle (ADLC)"** (Sierra AI, Zack Reneau-Wedeen, July 2025)
+   - URL: https://sierra.ai/blog/agent-development-life-cycle
+   - **The most mature articulation of how agent development differs from traditional software.** Replaces the SDLC for agent systems. Traditional software is deterministic and rule-based; agents are non-deterministic and goal-based. The ADLC follows the same arc (scope → build → test → release → run) but shifts what teams engineer: outcomes shaped by instructions, context, tool responses, permissions, and live state. Introduces the "agent engineer" role. Built from experience shipping agents for Sonos, WeightWatchers, SiriusXM serving millions monthly.
 
-### Industry Methodology Proposals (Blog Posts, Not Papers)
+2. **"Promptware Engineering: Software Engineering for Prompt-Enabled Systems"** (arXiv:2503.02400, March 2025)
+   - Treats prompt development with SE rigor. Key finding: **only 21.9% of prompt changes are documented** in real-world projects, often resulting in logical inconsistencies. Proposes full lifecycle: prompt requirements engineering, design, implementation, testing, debugging, and evolution.
 
-1. **Anthropic's "Building Effective Agents"** (Dec 2024)
-   - Key principle: start with augmented LLM patterns (retrieval, tool use) before escalating to autonomous agents. Proposes a maturity ladder.
+3. **"An AI-Led SDLC: Spec-Driven Development"** (Microsoft, Feb 2025)
+   - Introduces **Spec-Driven Development (SDD)** where architectural decisions, business logic, and intent are captured and versioned as first-class artifacts. GitHub released the open-source Spec Kit tool.
 
-2. **LangChain's development guides** (2025)
-   - Informal methodology: start simple → add tools → add memory → add multi-agent. Incremental complexity.
+4. **"The Prompt Report: A Systematic Survey of Prompt Engineering Techniques"** (arXiv:2406.06608, June 2024, updated Feb 2025)
+   - Establishes a structured taxonomy of 33 vocabulary terms, 58 prompting techniques, and 40 techniques for other modalities.
 
-3. **Microsoft AutoGen's design philosophy**
-   - Conversational patterns as the basis for multi-agent design.
+**Broader SE-for-AI work:**
 
-### What a Methodology Would Cover
+5. **"Software Engineering for AI-Based Systems: A Systematic Mapping Study"** (Martínez-Fernández et al., JSS 2020)
+   - Systematic review of SE practices for AI broadly.
 
-A software engineering methodology for agents would need to address each SDLC phase:
+6. **"LLM-Based Multi-Agent Systems for SE: Literature Review, Vision and the Road Ahead"** (arXiv:2404.04834, 2024)
+   - Organizes LLM multi-agent applications across SDLC stages. Covers ChatDev, MetaGPT, AgileCoder.
 
-| Phase | Traditional SE | Agent Equivalent | Status |
-|-------|---------------|------------------|--------|
-| **Requirements** | User stories, specs | Agent capability spec, task scope, safety requirements | No methodology |
-| **Design** | Architecture diagrams, interfaces | Pattern selection, tool selection, prompt design, guardrail design | No methodology |
-| **Implementation** | Coding, code review | Prompt engineering, tool integration, agent configuration, prompt review | No methodology |
-| **Testing** | Unit/integration/e2e tests | Eval suites, red teaming, scenario testing, regression testing | Emerging (2025-2026) |
-| **Deployment** | CI/CD, blue-green, canary | Agent deployment, shadow mode, canary agents | No methodology |
-| **Monitoring** | APM, alerting, dashboards | Agent observability, SLA monitoring, behavior monitoring | Emerging (AgentSLA) |
-| **Maintenance** | Bug fixes, updates, refactoring | Prompt updates, model migration, eval maintenance, debt paydown | No methodology |
+7. **AgentSpec** (ICSE 2026) — Specification language for agent behavior monitoring.
+
+**Industry methodology proposals:**
+
+8. **Anthropic's "Building Effective Agents"** (Dec 2024) — Start with augmented LLM patterns before autonomous agents.
+9. **LangChain's guides** (2025) — Simple → tools → memory → multi-agent.
+10. **Microsoft AutoGen** — Conversational patterns as design basis.
+
+### ADLC vs. SDLC: How Agent Development Differs
+
+Sierra's ADLC identifies the fundamental shifts:
+
+| Phase | Traditional SDLC | Agent ADLC (Sierra) | Key Difference |
+|-------|-----------------|---------------------|----------------|
+| **Scope** | User stories, specs | Agent capability spec + safety boundaries | "Code" includes English-language prompts |
+| **Build** | Coding, code review | Prompt engineering, tool integration, prompt review | Non-deterministic outputs |
+| **Test** | Unit/integration/e2e | Eval suites, red teaming, LLM-as-judge | Assertions → statistical thresholds |
+| **Release** | CI/CD, blue-green | Quality-gated deployment, canary agents | Model upgrades invalidate prior work |
+| **Run** | APM, alerting | Agent observability, SLA monitoring | Must monitor semantic quality, not just uptime |
+
+**Promptware Engineering** adds that only 21.9% of prompt changes are documented — suggesting the field needs prompt versioning and review practices comparable to code review.
+
+**Spec-Driven Development** (Microsoft) complements ADLC by making specifications first-class versioned artifacts, addressing the documentation gap.
+
+### What's Still Missing
+
+1. **Agent requirements engineering** — How to formally specify what an agent should and shouldn't do (ADLC acknowledges the scope phase but doesn't formalize it)
+2. **Agent design review** — Structured review process for agent architectures before implementation
+3. **Prompt review practices** — Code review equivalent for prompts (Promptware Engineering identifies the problem but doesn't propose a review process)
+4. **Agent maturity model** — Levels of development maturity (ad-hoc → managed → optimizing), similar to CMMI
+5. **Empirical validation** — ADLC is based on Sierra's experience; no independent validation across diverse organizations
 
 ### Forward Research Directions
 
-1. **"Agent Development Lifecycle"** — Propose and validate an end-to-end methodology for building agent systems, from requirements through maintenance
-2. **Agent requirements engineering** — How to specify what an agent should and shouldn't do (functional + safety requirements)
-3. **Agent design review** — Structured review process for agent architectures before implementation
-4. **Prompt review practices** — Code review equivalent for prompts and agent configurations
-5. **Agent maturity model** — Levels of agent development maturity (ad-hoc → managed → optimizing), similar to CMMI
+1. **Empirical validation of ADLC** — Apply Sierra's lifecycle across diverse organizations and agent types; measure outcomes
+2. **Agent requirements engineering** — Formal specification methods for agent capabilities, constraints, and safety boundaries
+3. **Prompt review methodology** — Structured review process with checklists, analogous to code review (addressing the 21.9% documentation rate)
+4. **Agent maturity model** — Organizational capability levels for agent development
+5. **Methodology comparison** — Empirical comparison of ADLC vs. SDD vs. ad-hoc approaches
 
 ---
 
@@ -481,25 +526,34 @@ The second topic where industry has outpaced academia.
 
 ### Academic Papers
 
-1. **"An Empirical Study of Testing Practices in Open Source AI Agent Frameworks"** (arXiv:2509.19185, Sept 2025)
-   - First empirical baseline of testing practices across agent frameworks. Taxonomy of 10 testing patterns. Closest work to understanding how agents are tested in pipelines.
+1. **"AI-Augmented CI/CD Pipelines: From Code Commit to Production"** (arXiv:2508.11867, 2025)
+   - Explores how AI can augment traditional CI/CD pipelines end-to-end from commit to production, including automated testing and deployment stages.
 
-2. **"The Rise of Agentic Testing: Multi-Agent Systems for Robust Software Quality Assurance"** (arXiv:2601.02454, Jan 2026)
-   - Proposes closed-loop multi-agent testing framework where agents test other agents. Implications for CI pipelines.
+2. **"An Empirical Study of Testing Practices in Open Source AI Agent Frameworks"** (arXiv:2509.19185, Sept 2025)
+   - First empirical baseline of testing practices across agent frameworks. Taxonomy of 10 testing patterns.
 
-3. **"Towards Automated Functional Testing of LLM-Based Agents"** (Jan 2026)
-   - Structural testing methodologies for agents that could integrate into CI pipelines.
+3. **"The Rise of Agentic Testing: Multi-Agent Systems for Robust Software Quality Assurance"** (arXiv:2601.02454, Jan 2026)
+   - Closed-loop multi-agent testing framework where agents test other agents.
+
+4. **"Towards Automated Functional Testing of LLM-Based Agents"** (Jan 2026)
+   - Structural testing methodologies for agents integrable into CI pipelines.
 
 ### Industry CI/CD Tools
 
-| Tool | Type | CI/CD Capability |
-|------|------|-----------------|
-| **promptfoo** | Open-source eval framework | CLI designed for CI pipelines; regression testing, red teaming |
-| **Braintrust** | Eval platform | Logging, scoring, regression detection pre-deployment |
-| **Patronus AI** | Eval + red-teaming | Automated guardrails and evaluation in deployment pipelines |
-| **LangSmith** | Dev platform | Dataset management, experiment tracking, testing |
-| **Arize Phoenix** | Open-source observability | Trace-based evaluation, pre-deployment testing |
-| **AgentOps** | Agent observability | Session recording, regression flagging |
+| Tool | Type | CI/CD Capability | Pricing |
+|------|------|-----------------|---------|
+| **promptfoo** | Open-source eval | CLI for CI; regression testing, red teaming. Native GitHub Actions | Free |
+| **DeepEval** | Pytest integration | Agent-specific metrics: Task Completion, Plan Quality, Step Efficiency (LLM-as-judge) | Free tier |
+| **Evidently AI** | GitHub Action | Downloads test prompts, runs agent, evaluates via LLM judges, fails CI if tests fail | Free tier |
+| **Braintrust** | Eval platform | Side-by-side prompt comparison, regression detection. Posts results to PRs | Paid |
+| **LangSmith** | Dev platform | Full CI/CD pipeline with LangGraph: unit/integration/e2e tests, quality-gated releases | $39/user/mo |
+| **Arize Phoenix** | Open-source observability | Path evaluations, convergence evaluations, session-level evaluations | Free |
+| **Patronus AI** | Eval + red-teaming | Automated guardrails and evaluation in deployment pipelines | Paid |
+| **AgentOps** | Agent observability | Session recording, cost optimization, regression flagging | Free tier |
+
+### Key Insight: LLM-as-Judge Is the Dominant Paradigm
+
+The core challenge is **non-determinism**: LLM outputs are subjective and context-dependent, so traditional assertion-based tests fail. The field has converged on **LLM-as-a-Judge scoring with quantitative thresholds** as pass/fail gates, combined with regression detection against baseline datasets.
 
 ### What's Missing
 
@@ -521,22 +575,25 @@ The second topic where industry has outpaced academia.
 
 ## 9. Agent A/B Testing
 
-**Status: WHITE SPACE (0 papers)**
+**Status: MINIMAL (revised upward — 1 dedicated paper)**
 
 ### What Exists
 
-Zero dedicated papers on A/B testing for LLM agents. The closest work:
+1. **"AgentA/B: Automated and Scalable Web A/B Testing with Interactive LLM Agents"** (Lu et al., arXiv:2504.09723, April 2025)
+   - Uses LLM-based autonomous agents with diverse personas to **simulate user interactions on live webpages**, replacing or augmenting real user traffic. Enables persona-driven agents that navigate dynamic pages and execute multi-step interactions (search, click, filter, purchase) to produce early behavioral signals before committing real traffic. **This is about using agents to perform A/B testing, not A/B testing of agents themselves** — but the methodology is transferable.
 
-1. **"Chatbot Arena"** (Zheng et al., ICML 2024)
-   - Open platform for evaluating LLMs through human preference using Elo-based ranking. Focused on chatbots, not agents, but establishes comparative evaluation methodology.
+2. **"Evaluation and Benchmarking of LLM Agents: A Survey"** (Mohammadi et al., ACM SIGKDD 2025, Toronto; arXiv:2507.21504)
+   - Two-dimensional taxonomy: evaluation objectives (behavior, capabilities, reliability, safety) × evaluation process (interaction modes, datasets, metrics, tooling). Highlights enterprise challenges: role-based access, reliability guarantees, long-horizon interactions.
 
-2. **"Judging LLM-as-a-Judge"** (Zheng et al., NeurIPS 2023)
-   - Automated judge methodology for comparing LLM outputs. Prerequisite for scalable A/B testing of agents.
+3. **"Chatbot Arena"** (Zheng et al., ICML 2024) — Elo-based ranking through head-to-head battles. Chatbot-focused but methodology is transferable.
 
-### Industry Practices (Undocumented)
+4. **"Judging LLM-as-a-Judge"** (Zheng et al., NeurIPS 2023) — Automated judge methodology, prerequisite for scalable A/B testing.
 
+### Industry Tools
+
+- **Langfuse** — Supports canary-style prompt deployments by labeling prompt versions (prod-a, prod-b) to split traffic
+- **Dynatrace** — End-to-end telemetry across full chain (UI → services → agents → model gateways → GPU) with standardized tracing for A/B testing and canary deployments
 - **Shadow mode** — Run new agent alongside old, compare outputs without user exposure
-- **Canary deployments** — Route small percentage of traffic to new agent variant
 - **Feature flags** — Toggle agent capabilities on/off for subsets of users
 
 ### Why Agent A/B Testing Is Harder Than Web A/B Testing
@@ -670,29 +727,46 @@ Zero dedicated papers on A/B testing for LLM agents. The closest work:
 
 ### The Maturity Gap
 
-Traditional software engineering has had **60+ years** to develop its practices. Agent engineering has had **~3 years** (since ChatGPT, Nov 2022). The gap is predictable — but the speed of agent adoption means we can't wait 60 years to close it.
+Traditional software engineering has had **60+ years** to develop its practices. Agent engineering has had **~3 years** (since ChatGPT, Nov 2022). The gap is narrowing faster than expected — 2025 saw significant progress.
 
 | Discipline | Traditional SE Milestone | Year | Agent Equivalent | Year |
 |-----------|------------------------|------|------------------|------|
-| Design Patterns | GoF Book | 1994 | — | Not yet |
+| Design Patterns | GoF Book | 1994 | Lu et al. catalog (18 patterns) | 2024 |
+| Development Lifecycle | Waterfall/Agile | 1970/2001 | Sierra ADLC | 2025 |
+| CI/CD | Continuous Integration | 2000 | LangSmith/promptfoo pipelines | 2024-2025 |
+| Performance Profiling | gprof/flamegraphs | 1982/2011 | AgentTaxo/AgentDiet | 2025 |
 | Refactoring | Fowler's Book | 1999 | — | Not yet |
-| CI/CD | Continuous Integration | 2000 | Industry tools only | 2024-2025 |
 | DevOps/SRE | Google SRE Book | 2016 | — | Not yet |
 | Technical Debt | Cunningham's metaphor | 1992 | — | Not yet |
-| A/B Testing | Web experimentation | 2000 | — | Not yet |
+| A/B Testing | Web experimentation | 2000 | AgentA/B (limited) | 2025 |
 | Incident Response | PagerDuty/SRE practices | 2010s | — | Not yet |
+
+### Cross-Cutting Themes From Research
+
+1. **Non-determinism is the fundamental challenge** — Every topic grapples with variable LLM outputs breaking traditional SE assumptions. CI/CD converges on LLM-as-Judge with statistical thresholds rather than assertions.
+
+2. **The "communication tax"** — AgentTaxo, AgentDiet, and OPTIMA collectively show multi-agent systems waste 40-70% of tokens on redundant context, verification overhead, and expired information. This is the single largest efficiency opportunity.
+
+3. **Convergence with microservices patterns** — Agent architecture follows the same trajectory as distributed systems: monolithic → decomposed, with patterns (orchestrator-worker, generator-critic) mapping directly to established patterns.
+
+4. **ADLC as successor to SDLC** — Sierra's Agent Development Life Cycle represents the most mature articulation of how agent engineering differs from traditional software engineering.
+
+5. **79% of multi-agent failures are specification failures** (Cemri et al.) — The biggest agent engineering problem is not technical but methodological: unclear specifications, not buggy code.
 
 ### Industry vs. Academia Divergence
 
-A distinctive feature of Dimension 6 is the **industry-academia gap**:
+The gap has **narrowed significantly since the initial assessment** but remains for specific topics:
 
-- **Industry has tools** (LangSmith, AgentOps, Braintrust, promptfoo, Helicone) but **no theory**
-- **Academia has neither** — it hasn't even started on most topics
-
-This creates risks:
-1. **Tools without foundations** — industry tools make implicit assumptions about what to measure and optimize, without theoretical justification
-2. **No evaluation criteria** — how do we know which observability tool is better? No framework exists
-3. **Fragmented standards** — each tool defines its own metrics, formats, and practices, leading to vendor lock-in
+| Area | Industry | Academia | Gap |
+|------|----------|----------|-----|
+| **Profiling** | 5+ commercial tools | 7+ papers (AgentTaxo, TokenOps, etc.) | **Closing** |
+| **CI/CD** | 8+ tools (promptfoo, DeepEval, etc.) | 3-5 papers | **Narrowing** |
+| **Methodology** | ADLC (Sierra), SDD (Microsoft) | Promptware Engineering paper | **Narrowing** |
+| **Design Patterns** | All major clouds have guides | Lu et al. catalog | **Narrowing** |
+| **Refactoring** | DSPy tangentially | 0 papers | **Wide** |
+| **Technical Debt** | Practitioner knowledge only | 0 agent-specific papers | **Wide** |
+| **Incident Response** | AI Incident Database | 0 agent-specific papers | **Wide** |
+| **Documentation** | Model/system cards | 0 agent-specific papers | **Wide** |
 
 ### The "DevOps for Agents" Opportunity
 
