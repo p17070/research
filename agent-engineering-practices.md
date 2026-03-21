@@ -24,13 +24,13 @@ The agent field is where software engineering was before the 1968 NATO Conferenc
 | 2 | Agent Anti-Patterns | 2-3 failure taxonomies | Practitioner knowledge + OWASP ASI | **EMERGING** (revised up) |
 | 3 | Agent Performance Profiling | 7+ (AgentTaxo, AgentDiet, OPTIMA, TokenOps, TALE) | 5+ commercial tools | **ESTABLISHED** (revised up) |
 | 4 | Agent Refactoring | 0 (agents-as-refactoring-tools exist, not refactoring agents) | DSPy tangentially | **WHITE SPACE** |
-| 5 | Agent Technical Debt | 0 (4+ for ML broadly) | Practitioner knowledge | **WHITE SPACE** |
-| 6 | Agent Documentation Standards | 0 (3+ for models) | Model/system cards | **WHITE SPACE** |
+| 5 | Agent Technical Debt | 2-3 (PromptDebt, Context Rot, SATD study) | IBM Agentic Drift, Portkey | **EMERGING** (revised up) |
+| 6 | Agent Documentation Standards | 1-2 (Agent Cards MICAI 2025, MIT AI Agent Index) | Google A2A Agent Cards | **EMERGING** (revised up) |
 | 7 | Agent Development Methodology | 3-5 (ADLC, Promptware Eng., Spec-Driven Dev.) | Sierra, Microsoft, blog posts | **EMERGING** (revised up) |
 | 8 | Agent CI/CD | 3-5 (AI-augmented pipelines, LangSmith CI/CD) | 8+ commercial tools | **EMERGING** (revised up) |
 | 9 | Agent A/B Testing | 1 (AgentA/B, April 2025) | Langfuse, Dynatrace | **MINIMAL** (revised up) |
-| 10 | Agent Incident Response | 0 (3+ for AI broadly) | AI Incident Database | **WHITE SPACE** |
-| 11 | Agent Capacity Planning | 0 (5+ for LLM serving) | Pricing/routing tools | **WHITE SPACE** |
+| 10 | Agent Incident Response | 1-2 (CoSAI framework, OWASP guide) | AI Incident Database, notable failures | **EMERGING** (revised up) |
+| 11 | Agent Capacity Planning | 3-5 (HERMES, BATS, TALE, FinOps) | Routing/pricing tools | **EMERGING** (revised up) |
 
 ---
 
@@ -347,22 +347,33 @@ No academic work proposes these mappings. Drawing from Fowler (1999):
 
 ## 5. Agent Technical Debt
 
-**Status: WHITE SPACE for agents (4+ papers for ML broadly)**
+**Status: EMERGING (revised upward — 2-3 LLM/agent-specific papers + foundational ML work)**
+
+### LLM/Agent-Specific Technical Debt (NEW)
+
+1. **"PromptDebt: A Comprehensive Study of Technical Debt Across LLM Projects"** (arXiv:2509.20497, Sept 2025)
+   - **First paper to taxonomize prompt-related technical debt.** Introduces "prompt smells" (missing templates, hardcoded values, long/unclear instructions, poorly managed document inputs) and "prompt requirement smells." These fragile prompts are difficult to maintain and degrade output quality.
+
+2. **"Self-Admitted Technical Debt in LLM Software: An Empirical Comparison with ML and Non-ML Software"** (arXiv:2601.06266, Jan 2026)
+   - **First empirical study of self-admitted technical debt (SATD) in the LLM era.** Key finding: LLM-based systems exhibit fundamentally different SATD patterns from traditional ML or non-ML software. The median time to first SATD in ML repos increased from 10 days to 441 days between 2021-2025.
+
+3. **"Context Rot"** (Chroma Research, 2025)
+   - URL: https://research.trychroma.com/context-rot
+   - Systematic study testing 18 frontier models showing **every model exhibits performance degradation as input length increases**, well before hitting context window limits. Three mechanisms: lost-in-the-middle effect, attention dilution (quadratic), distractor interference.
+
+4. **"Agentic Drift"** (IBM Think, 2025)
+   - Identifies "agentic drift" as a key risk where agent performance silently degrades as models update, training data shifts, or business contexts change. Proposes "intent-driven testing."
+
+5. **"RAG-MCP: Mitigating Prompt Bloat in LLM Tool Selection"** (arXiv:2505.03275, May 2025)
+   - Tool metadata consumes significant tokens. Proposes dynamic retrieval of relevant tools per query rather than global registration.
 
 ### Foundational Work (ML, Not Agent-Specific)
 
-1. **"Hidden Technical Debt in Machine Learning Systems"** (Google, NeurIPS 2015)
-   - Authors: Sculley, Holt, Golovin et al.
-   - The foundational paper. Identifies data dependencies, configuration debt, pipeline jungles, and the CACE principle ("Changing Anything Changes Everything"). Cited 4000+ times. Nearly every concept applies to agent systems but none has been validated in the agent context.
+6. **"Hidden Technical Debt in Machine Learning Systems"** (Google, NeurIPS 2015)
+   - The seminal paper. Identifies data dependencies, configuration debt, pipeline jungles, and the CACE principle. Cited 4000+.
 
-2. **"Challenges in Deploying Machine Learning: A Survey of Case Studies"** (Paleyes et al., NeurIPS 2022)
-   - Reviews 50+ deployment case studies. Taxonomy of deployment challenges including data management, model management, and infrastructure debt.
-
-3. **"Technical Debt in AI Systems: A Preliminary Taxonomy and Assessment"** (2024)
-   - Extends Google's ML debt framework with additional categories. Still traditional ML focused.
-
-4. **"Beyond the ML Model: Challenges for Deploying AI in Production"** (IEEE Software, 2024)
-   - Gap between ML development and production, touching on maintenance burden.
+7. **"How AI-Generated Code Accelerates Technical Debt"** (LeadDev, citing Google DORA Report 2024)
+   - DORA found 25% increase in AI usage quickens code reviews but results in 7.2% decrease in delivery stability. GitClear tracked 8x increase in duplicated code blocks in 2024.
 
 ### Agent-Specific Debt Types (No Academic Treatment)
 
@@ -379,47 +390,66 @@ No academic work proposes these mappings. Drawing from Fowler (1999):
 | **Guardrail Accretion** | Safety rules accumulate without pruning or testing | Security debt | Medium — false sense of safety |
 | **Implicit Coupling** | Agent behavior depends on undocumented model quirks | Hidden dependencies | Critical — breaks on model update |
 
-### What's Missing
+### Key Finding: Debt Is Shifting from Data to Prompts
 
-- **0 papers** on technical debt specific to LLM agent systems
-- **No empirical studies** measuring debt accumulation in agent systems over time
-- **No debt detection tools** for agent architectures
-- **No debt quantification** — how to measure the "interest rate" on agent technical debt
+The original Sculley et al. (2015) framework identified data dependencies as the primary debt source. For LLM agents, **debt is shifting to prompts and context**:
+- **PromptDebt** identifies new debt categories (prompt smells, template fragility) absent from the original taxonomy
+- **Context Rot** shows that outputs degrade even when prompts are well-crafted, due to attention mechanics
+- **Agentic Drift** shows that model updates silently break agent behavior (the CACE principle accelerated)
+- **Tool Sprawl** creates a new dependency management problem with overlapping, redundant capabilities
+
+### What's Still Missing
+
+- **No longitudinal empirical studies** measuring debt accumulation in agent systems over 6+ months
+- **No debt detection tools** — PromptDebt identifies smells but doesn't automate detection
+- **No debt quantification framework** — how to measure the "interest rate" on agent technical debt
 - **No maintenance cost models** — what does it cost to maintain an agent system over 1, 2, 5 years?
+- **No integration of all debt types** — prompt debt, context rot, agentic drift, and tool sprawl are studied separately
 
 ### Forward Research Directions
 
-1. **"Technical Debt in LLM Agent Systems"** — Empirical study of how agent systems accumulate debt, extending Google's 2015 framework
-2. **Agent debt metrics** — Quantifiable measures: prompt complexity growth rate, tool utilization ratio, eval-production gap
-3. **Debt detection tools** — Automated analysis of agent configurations to flag debt indicators
-4. **Longitudinal case studies** — Track real agent systems over months/years to measure debt accumulation
-5. **Model update impact analysis** — Quantify how LLM version changes propagate through agent systems (the CACE principle for agents)
+1. **Unified agent debt taxonomy** — Integrate PromptDebt, Context Rot, Agentic Drift, and Tool Sprawl into a single framework extending Sculley et al.
+2. **Automated debt detection** — Linters for prompt smells, context rot indicators, tool utilization analysis
+3. **Longitudinal case studies** — Track real agent systems over months/years to measure debt accumulation rates
+4. **Model update impact analysis** — Quantify how LLM version changes cascade through agent systems
+5. **Debt paydown economics** — When is it worth refactoring prompts vs. accepting degradation?
 
 ---
 
 ## 6. Agent Documentation Standards
 
-**Status: WHITE SPACE for agents (3+ papers for models)**
+**Status: EMERGING (revised upward — agent-specific documentation standards now exist)**
 
-### Foundational Work (Models, Not Agents)
+### Agent-Specific Documentation (NEW)
 
-1. **"Model Cards for Model Reporting"** (Mitchell et al., FAT* 2019)
-   - Proposes standardized ML model documentation: intended use, performance metrics, ethical considerations, limitations. Cited 2000+. The gold standard for AI documentation, but covers models, not agents.
+1. **"Agent Cards: A Documentation Standard for Operational AI Agents"** (MICAI 2025, Springer)
+   - URL: https://link.springer.com/chapter/10.1007/978-3-032-17933-3_25
+   - **Proposes "Agent Cards" as a structured documentation artifact analogous to Model Cards but designed for operational agents.** Captures roles, memory taxonomy, tool integrations, communication protocols, monitoring hooks, governance scope, and evaluation metrics. Enables transparency, comparability, and auditability.
 
-2. **"Datasheets for Datasets"** (Gebru et al., CACM 2021)
-   - Standardized dataset documentation analogous to electronics datasheets. Relevant because agents consume data.
+2. **"The 2025 AI Agent Index"** (MIT CSAIL, arXiv:2602.17753, Feb 2026)
+   - URL: https://aiagentindex.mit.edu/
+   - **Documents 30 prominent AI agents across 1,350 verified data fields.** Key finding: **only 4/30 agents provide agent-specific system cards** (ChatGPT Agent, OpenAI Codex, Claude Code, Gemini 2.5). **87% lack safety cards.** 25/30 disclose no internal safety results; 23/30 have no third-party testing.
 
-3. **"System Cards for AI-Based Decision-Making"** (2022)
-   - Extends model cards to system-level documentation. Closer to agents since agents are systems, not just models.
+3. **Google Agent2Agent (A2A) Protocol — Agent Cards**
+   - Machine-readable JSON documents at `/.well-known/agent-card.json` describing identity, capabilities, and skills. Based on JSON-RPC 2.0. Enables cross-organization agent discovery and communication.
 
-4. **Foundation Model Transparency Index** (Stanford HAI, 2023-2024)
-   - Scores providers on 100 transparency indicators. Establishes what should be documented about AI systems.
+4. **Oracle Open Agent Specification**
+   - Standardized representation for portability, reusability, and extensibility across AI agent platforms.
+
+5. **"A Survey of AI Agent Protocols"** (arXiv:2504.16736, April 2025)
+   - Identifies absence of standardized protocols as a critical bottleneck hindering interoperability.
+
+### Foundational Work (Models)
+
+6. **"Model Cards for Model Reporting"** (Mitchell et al., FAT* 2019) — Gold standard for ML documentation. Cited 2000+.
+7. **"Datasheets for Datasets"** (Gebru et al., CACM 2021)
+8. **Foundation Model Transparency Index** (Stanford HAI, 2023-2024) — 100 transparency indicators.
 
 ### Industry Precedents
 
-- **OpenAI System Cards** (GPT-4, GPT-4o) — document capabilities, limitations, safety evaluations
-- **Anthropic Model Cards** (Claude) — document capabilities and safety properties
-- **Google DeepMind** — various safety documentation efforts
+- **OpenAI System Cards** (GPT-4, GPT-4o) — 100+ external red teamers across 45 languages
+- **Anthropic System Cards** — Published for every Claude generation; 99.78% harmless response rate for Opus 4.5
+- **Open Model Card Project** (openmodelcard.org) — Community standardized JSON format
 
 ### What an "Agent Card" Would Need
 
@@ -438,12 +468,23 @@ No academic work proposes these mappings. Drawing from Fowler (1999):
 | **Incident History** | Known incidents and mitigations | **No equivalent** |
 | **Composition Rules** | How this agent interacts with other agents | **No equivalent** |
 
+### Key Finding: 87% of Agents Lack Safety Documentation
+
+The MIT AI Agent Index reveals a stark documentation crisis: only 4 of 30 major agents have agent-specific system cards. This is despite model cards being established practice since 2019. The gap is not about the absence of standards — Agent Cards (MICAI 2025) and A2A Agent Cards exist — but about adoption.
+
+### What's Still Missing
+
+- **No consensus standard** — Agent Cards (MICAI), A2A Agent Cards (Google), Oracle Agent Spec, and AgentSpec (ICSE 2026) are competing proposals with no convergence
+- **No adoption incentive** — 87% of agents lack documentation, suggesting standards alone are insufficient
+- **No automated generation** — Agent cards must be manually authored; no tools introspect configurations to generate them
+- **No agent capability benchmarking** — Standardized tests to populate the "Capabilities" section don't exist
+
 ### Forward Research Directions
 
-1. **"Agent Cards: Documentation Standards for LLM Agent Systems"** — Propose and validate an agent-specific documentation standard
+1. **Standard convergence** — Harmonize Agent Cards (MICAI), A2A Agent Cards (Google), Oracle Agent Spec, and IEEE 3394 into a unified standard
 2. **Automated agent card generation** — Tools that introspect agent configurations and generate documentation
-3. **Agent capability benchmarking** — Standardized tests that populate the "Capabilities" section of agent cards
-4. **IEEE 3394 integration** — Align agent documentation with the emerging IEEE standard for agent interoperability
+3. **Documentation compliance metrics** — Extend MIT AI Agent Index methodology to track adoption over time
+4. **Regulatory alignment** — Align agent documentation with EU AI Act requirements for high-risk AI systems
 
 ---
 
@@ -620,105 +661,119 @@ The core challenge is **non-determinism**: LLM outputs are subjective and contex
 
 ## 10. Agent Incident Response
 
-**Status: WHITE SPACE for agents (3+ papers for AI broadly)**
+**Status: EMERGING (revised upward — frameworks and playbooks now exist)**
 
-### What Exists (AI Broadly, Not Agent-Specific)
+### Incident Response Frameworks (NEW)
 
-1. **AI Incident Database** (McGregor, AAAI 2021)
-   - URL: https://incidentdatabase.ai/
-   - Catalogues 700+ real-world AI incidents. Not agent-specific but includes chatbot failures, autonomous system failures. Primary data source.
+1. **CoSAI AI Incident Response Framework v1.0** (Coalition for Secure AI, Nov 2025)
+   - URL: https://www.coalitionforsecureai.org/defending-ai-systems-a-new-framework-for-incident-response-in-the-age-of-intelligent-technology/
+   - **Open-source framework specifically addressing agentic AI failures.** Includes playbooks with detection methods, triage criteria, containment steps, and recovery procedures for **five common AI architecture patterns** (from basic LLM apps to complex agentic RAG systems). Immediately usable by security operations teams.
 
-2. **OECD AI Incident Monitor** (2024)
-   - Classifies AI incidents by type, severity, sector. Taxonomic framework applicable to agents.
+2. **OWASP GenAI Incident Response Guide** (2025)
+   - Aligns with NIST, ISO, and OWASP Top 10 for LLM Applications. Stresses cross-functional collaboration (security, legal, compliance, data science). Identifies key challenges: absence of AI-focused monitoring, difficulty validating outputs at scale, accountability gaps across multi-vendor chains.
 
-3. **NIST AI Risk Management Framework** (AI 100-1, 2023)
-   - General framework for managing AI risks including incident response guidelines. Not agent-specific.
+3. **America's AI Action Plan** (White House, July 2025)
+   - Directs federal agencies to partner with private sector on AI incident response standards and update CISA's playbook to cover AI system failures.
 
-4. **"Towards a Science of AI Agent Reliability"** (Princeton, Feb 2026)
-   - Defines 12 reliability metrics across 4 dimensions. Closest work to establishing what constitutes an "agent incident."
+### Incident Databases
 
-### SRE → Agent Incident Response Mapping
+4. **AI Incident Database (AIID)** — 1,200+ reports. Stanford AI Index 2025: incidents surged from 149 (2023) to 233 (2024), a **56.4% increase**.
+5. **MIT AI Incident Tracker** — Tracks incidents 2015-2025 using MIT AI Risk Repository taxonomies.
 
-| SRE Concept | Agent Equivalent | Academic Treatment |
-|-------------|------------------|-------------------|
-| **Runbook** | Agent failure playbook (loop detection, hallucination recovery, tool failure) | None |
-| **Severity Levels** | P0: data loss/corruption; P1: agent stuck/looping; P2: poor quality output | None |
-| **Post-Mortem** | Root cause: bad tool output? wrong plan? context overflow? model regression? | None |
-| **Error Budget** | Acceptable failure rate before human takeover mandated | None |
-| **Circuit Breaker** | Automatic agent shutdown on repeated failures | Practitioner blogs only |
-| **Rollback** | Revert agent to previous version/config on failure | None (white space in Dim 1) |
-| **Alerting Rules** | Thresholds for paging humans about agent behavior | None |
-| **Blameless Culture** | Agent failures as learning opportunities, not blame targets | None |
+### Notable Agent Failures in Production
 
-### What's Missing
+| Incident | What Happened | Impact | Response |
+|----------|--------------|--------|----------|
+| **Replit Agent Data Deletion** (July 2025) | Agent deleted 1,206 executive records despite all-caps code freeze instruction | Data loss, AIID #1152 | Implemented "planning-only mode" requiring confirmation for destructive ops |
+| **Runaway API Costs** | Research agent entered recursive loop | $47,000 in API calls over 11 days | Detection system added |
+| **Unauthorized Infra Destruction** | Agent executed `terraform destroy` on production | Production outage | Missing state file was root cause |
+| **Unauthorized Purchases** (Feb 2025) | Agent asked to check egg prices instead purchased eggs | Unauthorized transaction | Consent framework gaps |
 
-- **No incident taxonomy** for agent-specific failures (distinct from general AI incidents)
-- **No severity classification** standard for agent incidents
-- **No post-mortem methodology** adapted for agent failures
-- **No error budget framework** for agent reliability
-- **No runbook templates** for common agent failures (infinite loop, hallucination cascade, tool failure, context overflow)
-- **No on-call practices** for agent operations teams
+### SRE Practices Adapted for Agents (NEW)
+
+6. **"AI Reliability Engineering (AIRE)"** (Solo.io, 2025)
+   - Defines AIRE as embedding AI agents into platform engineering workflows (GitOps, CI/CD, IaC). Agents observe architecture, correlate events, access tribal knowledge.
+
+7. **"Human-Centred AI for SRE"** (InfoQ, Jan 2026)
+   - Multi-agent AI working alongside on-call engineers. Narrowing search space while leaving judgment to humans.
+
+8. **AWS Multi-Agent SRE Architecture** (AWS, 2025)
+   - Four specialized agents (DB Ops, Payment, Network, etc.) under supervisor agent, each trained on domain-specific runbooks.
+
+### What's Still Missing
+
+- **No agent-specific incident taxonomy** — CoSAI covers architecture patterns but doesn't classify agent failure types
+- **No post-mortem methodology** adapted specifically for agent failures (root cause: bad tool output? wrong plan? context overflow? model regression?)
+- **No error budget framework** — What's the acceptable agent failure rate before mandating human takeover?
+- **No automated root cause analysis** — Observability tools show traces but don't automatically attribute failures
 
 ### Forward Research Directions
 
-1. **Agent incident taxonomy** — Classify agent-specific incidents by type, root cause, severity, and remediation
-2. **Agent post-mortem methodology** — Structured analysis framework for understanding why agents failed
-3. **Error budgets for agents** — Formal framework for acceptable failure rates across different agent tasks
-4. **Automated incident detection** — Real-time detection of agent anomalies that constitute incidents
-5. **Agent SRE practices** — Adapt SRE discipline (error budgets, SLOs, toil reduction) for agent operations
+1. **Agent incident taxonomy** — Classify agent-specific incidents by type (data corruption, unauthorized action, infinite loop, hallucination cascade) with severity levels
+2. **Agent post-mortem methodology** — Structured framework extending CoSAI with root cause categories specific to agent failures
+3. **Error budgets for agents** — Formal framework defining acceptable failure rates across task types
+4. **Automated incident detection** — Real-time behavioral anomaly detection triggering circuit breakers
+5. **Agent SRE handbook** — Comprehensive guide adapting Google SRE principles for agent operations
 
 ---
 
 ## 11. Agent Capacity Planning
 
-**Status: WHITE SPACE for agents (5+ papers for LLM serving)**
+**Status: EMERGING (revised upward — cost management becoming first-class concern)**
 
-### What Exists (LLM Serving, Not Agent-Specific)
+### Academic Papers
 
-1. **"Astraea: Towards Fair and Efficient Learning-based Congestion Control for LLM Serving"** (2025)
-   - Resource allocation for LLM serving. Proves scheduling is NP-hard for LLM workloads.
+1. **"Understanding and Optimizing Multi-Stage AI Inference Pipelines" (HERMES)** (MIT CSAIL, 2025)
+   - Enables nine distinct routing strategies with a modular router API for multi-stage inference. Global coordinator orchestrates execution across clients for efficient capacity management.
 
-2. **Llumnix** (OSDI 2024)
-   - Dynamic scheduling for LLM inference including preemptive scheduling and GPU migration.
+2. **"Budget-Aware Tool-Use Enables Effective Agent Scaling" (BATS)** (arXiv:2511.17006, Nov 2025)
+   - Extends test-time scaling to tool-augmented agents under budget constraints. Introduces AgentTTS (optimizing LLM size and sampling under FLOPs budgets) and **SLIM (periodic summarization for managing context growth in long-horizon agents).**
 
-3. **"Efficient Agents"** (2025)
-   - Token consumption patterns across agent architectures. Foundational data for capacity planning.
+3. **"Token-Budget-Aware LLM Reasoning" (TALE)** (ACL 2025 Findings)
+   - Dynamically adjusts reasoning token counts based on problem complexity. Reduces costs with slight performance loss.
 
-4. **BudgetThinker** (2025)
-   - Models computational budget allocation across reasoning steps.
+4. **Astraea** (2025) — Proves LLM scheduling is NP-hard. Fair resource allocation.
+5. **Llumnix** (OSDI 2024) — Dynamic scheduling with preemptive GPU migration.
+6. **BudgetThinker** (2025) — Computational budget allocation across reasoning steps.
+7. **SPAgent** (2025) — Adaptive model routing for cost/performance optimization.
 
-5. **BATS** (2025)
-   - Task scheduling under budget constraints for multi-agent systems. Includes token/compute cost models.
+### Industry Cost Data
 
-6. **SPAgent** (2025)
-   - Adaptive model routing for cost/performance optimization.
+8. **"The Hidden Costs of Agentic AI"** (Galileo AI, 2025)
+   - Gartner predicts **40%+ of agentic AI projects will fail to reach production by 2027** due to cost/complexity. 53% of AI teams experience costs exceeding forecasts by 40%+. Hybrid architectures can reduce spend by 30-50%.
+
+9. **"FinOps in the Age of AI"** (Finout, 2025)
+   - Production cost forecasting: inference from complex prompts can drive daily expenses to **$3,000-$6,000 per 10,000 user sessions.**
+
+10. **LLM Pricing Trends** (Stanford AI Index 2025)
+    - Inference costs for GPT-3.5-class models fell **280-fold** between 2020-2024. H100 cloud prices dropped from $7-8/hr to $1.49-3.90/hr.
 
 ### Industry Approaches
 
-- **Inference cost calculators** — OpenAI, Anthropic, Google provide token-based pricing
-- **LLM routers** — Martian, Portkey, LiteLLM route to cheaper models when possible
-- **Auto-scaling engines** — vLLM, TGI, TensorRT-LLM provide scaling for LLM inference
+- **Intelligent routing** — HERMES, Martian, Portkey, LiteLLM, Requesty route queries to cheapest capable model
+- **OpenTelemetry** — Converging as industry standard for agent telemetry (opentelemetry.io/blog/2025/ai-agent-observability)
+- **Datadog LLM Observability** — End-to-end tracing with cost attribution
+- **Auto-scaling** — vLLM, TGI, TensorRT-LLM for inference workloads
 
-### What Agent Capacity Planning Needs
+### What's Still Missing
 
 | Planning Aspect | Description | Current State |
 |----------------|-------------|---------------|
-| **Token budget prediction** | Tokens needed for agent X on task type Y | Partial (BATS, BudgetThinker) |
+| **End-to-end cost prediction** | Total cost before execution starts | No treatment |
 | **Concurrency modeling** | How many agents can run simultaneously | No treatment |
 | **Scaling laws for agents** | How quality/cost scales with resources | No treatment |
-| **Burst capacity** | Handling demand spikes for agent workloads | No treatment |
-| **Multi-model costing** | Cost prediction for agents using multiple models | Partial (SPAgent) |
-| **Tool call overhead** | External API call costs in agent pipelines | No treatment |
-| **Memory storage costs** | Long-term memory storage at scale | No treatment |
-| **End-to-end cost prediction** | Total cost of agent task completion | No treatment |
+| **Burst capacity** | Handling demand spikes | No treatment |
+| **Agent workload characterization** | Empirical profiles (burstiness, seasonality) | No treatment |
+| **Token budget prediction** | Tokens needed for agent X on task type Y | Partial (BATS, TALE) |
+| **Multi-model costing** | Cost for agents using multiple models | Partial (SPAgent, HERMES) |
 
 ### Forward Research Directions
 
-1. **Agent scaling laws** — Empirical study of how agent quality, cost, and latency scale with compute (analogous to Kaplan/Chinchilla scaling laws for LLMs)
-2. **Task-aware capacity models** — Predict resource needs based on task type, complexity, and agent architecture
-3. **Multi-tenant capacity planning** — Resource allocation for shared agent infrastructure serving multiple users/orgs
-4. **Agent workload characterization** — Empirical profiles of real agent workloads (burstiness, seasonality, task mix)
-5. **Cost prediction models** — Given an agent config and task description, predict total cost before execution
+1. **Agent scaling laws** — How do quality, cost, and latency scale with compute? (analogous to Kaplan/Chinchilla laws)
+2. **Pre-execution cost prediction** — Given agent config + task description, predict total cost before running
+3. **Agent workload characterization** — Empirical profiles of real production workloads
+4. **FinOps for agents** — Comprehensive cost management discipline, extending traditional FinOps
+5. **Multi-tenant capacity planning** — Resource allocation for shared agent infrastructure
 
 ---
 ---
@@ -736,10 +791,11 @@ Traditional software engineering has had **60+ years** to develop its practices.
 | CI/CD | Continuous Integration | 2000 | LangSmith/promptfoo pipelines | 2024-2025 |
 | Performance Profiling | gprof/flamegraphs | 1982/2011 | AgentTaxo/AgentDiet | 2025 |
 | Refactoring | Fowler's Book | 1999 | — | Not yet |
-| DevOps/SRE | Google SRE Book | 2016 | — | Not yet |
-| Technical Debt | Cunningham's metaphor | 1992 | — | Not yet |
+| DevOps/SRE | Google SRE Book | 2016 | CoSAI framework, AIRE | 2025 |
+| Technical Debt | Cunningham's metaphor | 1992 | PromptDebt, Context Rot | 2025 |
+| Documentation | IEEE standards | Various | Agent Cards (MICAI), A2A | 2025 |
 | A/B Testing | Web experimentation | 2000 | AgentA/B (limited) | 2025 |
-| Incident Response | PagerDuty/SRE practices | 2010s | — | Not yet |
+| Incident Response | PagerDuty/SRE practices | 2010s | CoSAI, OWASP GenAI IR | 2025 |
 
 ### Cross-Cutting Themes From Research
 
@@ -763,10 +819,10 @@ The gap has **narrowed significantly since the initial assessment** but remains 
 | **CI/CD** | 8+ tools (promptfoo, DeepEval, etc.) | 3-5 papers | **Narrowing** |
 | **Methodology** | ADLC (Sierra), SDD (Microsoft) | Promptware Engineering paper | **Narrowing** |
 | **Design Patterns** | All major clouds have guides | Lu et al. catalog | **Narrowing** |
-| **Refactoring** | DSPy tangentially | 0 papers | **Wide** |
-| **Technical Debt** | Practitioner knowledge only | 0 agent-specific papers | **Wide** |
-| **Incident Response** | AI Incident Database | 0 agent-specific papers | **Wide** |
-| **Documentation** | Model/system cards | 0 agent-specific papers | **Wide** |
+| **Technical Debt** | IBM Agentic Drift, Portkey | PromptDebt, Context Rot papers | **Narrowing** |
+| **Documentation** | A2A Agent Cards, Oracle Spec | Agent Cards (MICAI), MIT Index | **Narrowing** |
+| **Incident Response** | CoSAI framework, OWASP guide | Notable failure cases documented | **Narrowing** |
+| **Refactoring** | DSPy tangentially | 0 papers on refactoring agents | **Wide** |
 
 ### The "DevOps for Agents" Opportunity
 
@@ -788,15 +844,15 @@ A research agenda for "Agent DevOps" would need:
 
 ### Priority Research Papers
 
-Based on impact and feasibility, these are the highest-priority papers that could be written:
+Based on impact and feasibility, these are the highest-priority papers that could **still** be written (accounting for what now exists):
 
-| Priority | Paper | Why |
-|----------|-------|-----|
-| **1** | "Design Patterns for LLM Agent Systems" | Names and formalizes what practitioners already do; immediate practical value |
-| **2** | "Technical Debt in LLM Agent Systems" | Empirical study extending Google's 2015 framework; high citation potential |
-| **3** | "Agent Cards: Documentation Standards for Agentic AI" | Extends model cards; regulatory relevance (EU AI Act) |
-| **4** | "Agent Smells: Anti-Patterns in LLM Agent Development" | Pairs with design patterns; direct practitioner value |
-| **5** | "The Agent Development Lifecycle" | First comprehensive SE methodology for agents; fills the biggest process gap |
-| **6** | "Agent CI/CD: Continuous Delivery for Agentic Systems" | Reference architecture; bridges industry practice and academic framework |
-| **7** | "SRE for Agents: Incident Response and Reliability Engineering" | Adapts proven SRE discipline; immediate operational value |
+| Priority | Paper | Why | What Exists Already |
+|----------|-------|-----|-------------------|
+| **1** | "Refactoring LLM Agent Systems" | The only topic with truly 0 coverage; direct practitioner value | Nothing — complete white space |
+| **2** | "Unified Agent Technical Debt Taxonomy" | Integrate PromptDebt + Context Rot + Agentic Drift + Tool Sprawl | Separate papers exist; no integration |
+| **3** | "Agent Pattern Selection Framework" | Decision guidance: which pattern for which task? | Lu et al. catalog exists but no selection guidance |
+| **4** | "Agent CI/CD Reference Architecture" | Bridge industry tools (promptfoo, DeepEval) with academic framework | Tools exist; no architecture framework |
+| **5** | "Agent A/B Testing: Statistical Frameworks" | Sample size, metrics, significance for multi-step agents | AgentA/B exists but for testing websites, not testing agents |
+| **6** | "Agent Scaling Laws" | How quality/cost scale with compute for agents | BATS/TALE exist for token budgets; no scaling laws |
+| **7** | "Empirical ADLC Validation" | Validate Sierra's lifecycle across diverse organizations | ADLC proposed; no independent validation |
 
