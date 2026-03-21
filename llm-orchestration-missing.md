@@ -60,15 +60,15 @@ We then organized findings from "most missing" to "least missing."
 |-------|--------|--------|-------|
 | Agent type system / typed actions | 0 | **WHITE SPACE** | No work on type systems for agent action spaces |
 | Agent abort / cancellation semantics | 0 | **WHITE SPACE** | No formal treatment of what happens when agents are canceled mid-action |
-| Agent contract / interface specification | 0 | **WHITE SPACE** | No work on formal contracts between agents (pre/post conditions, guarantees) |
-| Agent invariants / preconditions | 0 | **WHITE SPACE** | No work on maintaining invariants across agent execution steps |
+| Agent contract / interface specification | 3-5 | **EMERGING** | AgentSpec (ICSE 2026), Schema First Tool APIs, IEEE 3394 standard. Growing |
+| Agent invariants for agent behavior | 0 | **WHITE SPACE** | Papers exist for LLMs verifying *program* invariants, but none constraining *agent behavior* with invariants |
 | Agent determinism / reproducibility | 0-1 | **WHITE SPACE** | Acknowledged as a problem but no dedicated solutions |
-| Agent conflict resolution | 1-2 | **MINIMAL** | Some multi-agent work touches this but no dedicated frameworks |
-| Agent priority / scheduling | 1-2 | **MINIMAL** | AIOS addresses scheduling; otherwise wide open |
-| Agent dependency management | 1-2 | **MINIMAL** | DAG-based workflow papers touch this tangentially |
-| Agent delegation / handoff | 2-3 | **EMERGING** | A2A protocol, some orchestration papers. Still early |
-| Agent explainability / justification | 3-5 | **EMERGING** | XAI + agents intersection growing. Most work is on LLM explanations, not agent-level |
-| Agent trust calibration | 3-5 | **EMERGING** | "When to trust agent" is studied but mostly in HCI contexts |
+| Agent conflict resolution | 5+ | **ESTABLISHED** | ACL 2025, KARMA (NeurIPS 2025), shared memory conflict rules. Well-covered |
+| Agent priority / scheduling | 6+ | **ESTABLISHED** | Agent.xpu, Astraea (NP-hard proof), PROSERVE, Llumnix (OSDI 2024). Active |
+| Agent dependency management | 3-5 | **EMERGING** | SeqCV (NeurIPS 2025), Flow (ICLR 2025), GPTSwarm (ICML 2024) |
+| Agent delegation / handoff | 5+ | **ESTABLISHED** | COMMAND (game-theoretic), DyLAN (COLM 2024), A2A/MCP protocols |
+| Agent explainability / justification | 5+ | **ESTABLISHED** | ACM TIST survey, EXCLAIM, TRiSM, IEEE. Well-covered |
+| Agent trust calibration | 5+ | **ESTABLISHED** | CHI 2025 (N=248), TCMM, TrustAgent (EMNLP 2024), PNAS Nexus. Well-covered |
 
 ---
 
@@ -134,34 +134,33 @@ These topics have **zero dedicated academic papers** as of March 2026:
 3. **Agent rate limiting** — No academic treatment; only framework-level
 
 ### Formal Properties & Semantics
-6. **Agent type system** — No type systems for agent action spaces
-7. **Agent abort/cancellation semantics** — No formal treatment of mid-action cancellation
-8. **Agent contracts / interface specification** — No pre/post conditions for agent interactions
-9. **Agent invariant maintenance** — No work on maintaining invariants across execution steps
-10. **Agent context switching** — No work on concurrent task management
+6. **Agent type system** — No type systems for agent action spaces (1-2 tangential papers)
+7. **Agent abort/cancellation semantics** — No formal treatment of mid-action cancellation (confirmed 0)
+8. **Agent behavioral invariants** — Papers use LLMs to verify *program* invariants, but none constrain *agent behavior* with formal invariants
+9. **Agent context switching** — No work on concurrent task management
 
 ### Safety (Specific)
-11. **Agent supply chain attacks** — Compromised tools/plugins in agent toolchains
-12. **Agent data exfiltration prevention** — Agents with data access + network = unaddressed risk
-13. **Agent privilege escalation** — Agents gaining more permissions than intended
-14. **Agent action anomaly detection** — Detecting abnormal agent behavior patterns
+10. **Agent supply chain attacks** — Compromised tools/plugins in agent toolchains
+11. **Agent data exfiltration prevention** — Agents with data access + network = unaddressed risk
+12. **Agent privilege escalation** — Agents gaining more permissions than intended
+13. **Agent action anomaly detection** — Detecting abnormal agent behavior patterns
 
 ### Engineering & Operations
-15. **Agent design patterns** — No academic pattern catalog
-16. **Agent anti-patterns** — No catalog of what not to do
-17. **Agent performance profiling** — No tools for profiling token/time spend
-18. **Agent refactoring** — No work on improving architecture without changing behavior
-19. **Agent technical debt** — No study of complexity accumulation
-20. **Agent CI/CD** — No continuous integration for agent systems
-21. **Agent A/B testing** — No work on comparing agent variants
-22. **Agent incident response** — No academic treatment
-23. **Agent capacity planning** — No resource prediction for agent workloads
-24. **Agent development methodology** — No software engineering methodology for agents
+14. **Agent design patterns** — No academic pattern catalog
+15. **Agent anti-patterns** — No catalog of what not to do
+16. **Agent performance profiling** — No tools for profiling token/time spend
+17. **Agent refactoring** — No work on improving architecture without changing behavior
+18. **Agent technical debt** — No study of complexity accumulation
+19. **Agent CI/CD** — No continuous integration for agent systems
+20. **Agent A/B testing** — No work on comparing agent variants
+21. **Agent incident response** — No academic treatment
+22. **Agent capacity planning** — No resource prediction for agent workloads
+23. **Agent development methodology** — No software engineering methodology for agents
 
 ### Cognition
-25. **Agent metacognition** — "I should stop and ask" behavior unstudied
-26. **Agent attention management** — What to focus on in long contexts
-27. **Agent cross-task knowledge transfer** — Real-time transfer between tasks
+24. **Agent metacognition** — "I should stop and ask" behavior unstudied
+25. **Agent attention management** — What to focus on in long contexts
+26. **Agent cross-task knowledge transfer** — Real-time transfer between tasks
 
 ---
 
@@ -175,10 +174,8 @@ These topics have only **1-2 dedicated papers**:
 4. **Agent caching / memoization** — APC only
 5. **Agent composability** — Agent S2 only
 6. **Agent determinism / reproducibility** — Acknowledged but unsolved
-7. **Agent conflict resolution** — No dedicated frameworks
-8. **Agent priority / scheduling** — AIOS only
-9. **Agent collusion detection** — Risk identified but no solutions
-10. **Agent consent frameworks** — No formal per-action authorization
+7. **Agent collusion detection** — Risk identified but no solutions
+8. **Agent consent frameworks** — No formal per-action authorization
 11. **Agent graceful degradation** — Industry patterns only
 12. **Agent goal inference / disambiguation** — Agents rarely ask clarifying questions
 13. **Agent self-monitoring** — Beyond Reflexion, very thin
